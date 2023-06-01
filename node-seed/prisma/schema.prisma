@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model ChatRoom {
+  id                BigInt              @id
+  name              String              @db.VarChar(255)
+  messages          Message[]
+  usersAndChatRooms UsersAndChatRooms[]
+
+  @@map("chat_rooms")
+}
+
+model Message {
+  id         BigInt   @id
+  content    String
+  type       String?  @default("text")
+  user_id    BigInt
+  room_id    BigInt
+  chat_rooms ChatRoom @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users      Users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([user_id, room_id])
+  @@map("messages")
+}
+
+model Users {
+  id                BigInt              @id
+  name              String              @db.VarChar(255)
+  messages          Message[]
+  usersAndChatRooms UsersAndChatRooms[]
+
+  @@map("users")
+}
+
+model UsersAndChatRooms {
+  id       BigInt   @id
+  user_id  BigInt
+  room_id  BigInt
+  ChatRoom ChatRoom @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Users    Users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([user_id, room_id])
+  @@map("users_and_chat_rooms")
+}
