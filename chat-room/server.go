@@ -39,6 +39,43 @@ func main() {
 	r.Use(middlewares.Auth)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	type joinRoomReq struct {
+		RoomID string `json:"roomId" validate:"required"`
+	}
+
+	r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
+		var jrr joinRoomReq
+		err := json.NewDecoder(r.Body).Decode(&jrr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			logger.L.Error().Err(err).Msg("Fail to decode")
+			return
+		}
+
+		validate := validator.New()
+		err = validate.Struct(jrr)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			logger.L.Error().Err(err).Msg("Fail to validate")
+			return
+		}
+
+		roomID, err := strconv.ParseInt(jrr.RoomID, 10, 64)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			logger.L.Error().Err(err).Msg("Cannot parse into uint")
+			return
+		}
+
+		res, err := api.JoinRoom(r.Context(), roomID)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		render.JSON(w, r, res)
+	})
+
 	r.Get("/v1/rooms", func(w http.ResponseWriter, r *http.Request) {
 		page, err := strconv.Atoi(r.URL.Query().Get("page"))
 		if err != nil {

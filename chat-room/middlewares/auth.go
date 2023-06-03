@@ -9,13 +9,14 @@ import (
 
 type ctxKey string
 
-func GetUserID(ctx context.Context) string {
-	return "9b5610e9-222f-4a6a-a67f-cef62705489f"
+func GetUserID(ctx context.Context) int64 {
+	// return 60376977282080781
+	return 60376977273692160
 
-	userID, ok := ctx.Value(ctxKey("userID")).(string)
+	userID, ok := ctx.Value(ctxKey("userID")).(int64)
 	if !ok {
 		logger.L.Error().Msg("Cannot extract token value in context")
-		return ""
+		return 0
 	}
 
 	return userID
