@@ -17,7 +17,7 @@ const generateId = () => {
 };
 
 const randomPick = (arr: (bigint | number)[], times: number) => {
-  const randomArr = [...Array(arr.length).keys()].map((_, idx) => arr[idx]);
+  const randomArr = [...Array(arr.length - 1).keys()].map((_, idx) => arr[idx]);
   for (let i = 0; i < randomArr.length; i++) {
     const randomPos = Math.floor(Math.random() * arr.length - 1);
 
@@ -52,11 +52,11 @@ async function main() {
   {
     const roomIds = randomPick(
       rooms.map((r) => r.id),
-      Math.floor(ROOMS_NUMBER * 0.75)
+      Math.floor(ROOMS_NUMBER * 0.75),
     );
     const userIds = randomPick(
       users.map((u) => u.id),
-      Math.floor(USERS_NUMBER * 0.75)
+      Math.floor(USERS_NUMBER * 0.75),
     );
     const createManyDataInput: {
       id: bigint;
