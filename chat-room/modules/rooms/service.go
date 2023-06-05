@@ -5,16 +5,13 @@ import (
 	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
+	roomsmodel "chatroom/modules/rooms/model"
 	"context"
 	"fmt"
 	"strconv"
 )
 
-type JoinRoomRes struct {
-	ID string `json:"id"`
-}
-
-func JoinRoom(ctx context.Context, roomID int64) (*JoinRoomRes, error) {
+func JoinRoom(ctx context.Context, roomID int64) (*roomsmodel.JoinRoomRes, error) {
 	userID := middlewares.GetUserID(ctx)
 
 	isRoomExist, err := IsRoomExist(roomID)
@@ -48,5 +45,48 @@ func JoinRoom(ctx context.Context, roomID int64) (*JoinRoomRes, error) {
 		return nil, err
 	}
 
-	return &JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
+	return &roomsmodel.JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
+}
+
+func Rooms(ctx context.Context, page int, limit int) (*roomsmodel.PaginateRoomsRes, error) {
+	userID := middlewares.GetUserID(ctx)
+
+	offset := uint64((page - 1) * limit)
+
+	sql, args, err :=
+		db.Psql.
+			Select("cr.*").
+			From("chat_rooms cr").
+			InnerJoin(
+				"users_and_chat_rooms uacr ON uacr.room_id = cr.id",
+			).
+			Where("uacr.user_id = $1", userID).
+			Limit(uint64(limit)).
+			Offset(offset).
+			ToSql()
+
+	if err != nil {
+		fmt.Println("Fail to create sql")
+		return nil, err
+	}
+
+	type chatRoom struct {
+		ID   string
+		Name string
+	}
+
+	rooms := []chatRoom{}
+
+	err = db.Conn.Select(&rooms, sql, args...)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	rr := []roomsmodel.RoomsRes{}
+	for _, room := range rooms {
+		rr = append(rr, roomsmodel.RoomsRes(room))
+	}
+
+	return &roomsmodel.PaginateRoomsRes{Page: 10, Limit: 10, Data: rr}, nil
 }
