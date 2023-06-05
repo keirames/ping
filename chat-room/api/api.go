@@ -2,13 +2,10 @@ package api
 
 import (
 	"chatroom/db"
-	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
 	"context"
-	"database/sql"
 	"fmt"
-	"strconv"
 
 	sq "github.com/Masterminds/squirrel"
 	_ "github.com/lib/pq"
@@ -45,7 +42,7 @@ func Rooms(ctx context.Context, page int, limit int) (*PaginateRoomsRes, error) 
 			ToSql()
 
 	if err != nil {
-		fmt.Println("not possible")
+		fmt.Println("Fail to create sql")
 		return nil, err
 	}
 
@@ -144,81 +141,4 @@ func CreateRoom(name string, memberIDs []string) (*RoomsResponse, error) {
 	}
 
 	return &RoomsResponse{ID: roomID, Name: name}, nil
-}
-
-type JoinRoomRes struct {
-	ID string `json:"id"`
-}
-
-func JoinRoom(ctx context.Context, roomID int64) (*JoinRoomRes, error) {
-	userID := middlewares.GetUserID(ctx)
-
-	sqlQ, args, err :=
-		psql.
-			Select("id").
-			From("chat_rooms as cr").
-			Where(sq.Eq{"cr.id": roomID}).
-			ToSql()
-
-	if err != nil {
-		logger.L.Error().Err(err).Msg("Fail to create sql")
-		return nil, err
-	}
-
-	var isRoomIDExist int64
-	err = db.Conn.Get(&isRoomIDExist, sqlQ, args...)
-	if err == sql.ErrNoRows {
-		return nil, err
-	}
-	if err != nil {
-		logger.L.Error().Err(err).Msg("Fail to query")
-		return nil, err
-	}
-
-	sqlQ, args, err =
-		psql.
-			Select("id").
-			From("users_and_chat_rooms as uacr").
-			Where(
-				sq.And{
-					sq.Eq{"uacr.user_id": userID},
-					sq.Eq{"uacr.room_id": roomID},
-				}).
-			ToSql()
-	if err != nil {
-		logger.L.Error().Err(err).Msg("Fail to create sql")
-		return nil, err
-	}
-
-	var isJoined int64
-	err = db.Conn.Get(&isJoined, sqlQ, args...)
-	if err != nil && err != sql.ErrNoRows {
-		logger.L.Error().Err(err).Msg("Fail to query")
-		return nil, err
-	}
-
-	if isJoined != 0 {
-		logger.L.Info().Msg("user is already inside room")
-		return nil, fmt.Errorf("user is already inside room")
-	}
-
-	sqlQ, args, err =
-		psql.
-			Insert("users_and_chat_rooms").
-			Columns("id", "user_id", "room_id").
-			Values(keygen.Snowflake(), userID, roomID).
-			ToSql()
-	fmt.Println(sqlQ, args)
-	if err != nil {
-		logger.L.Error().Err(err).Msg("Fail to create sql")
-		return nil, err
-	}
-
-	_, err = db.Conn.Exec(sqlQ, args...)
-	if err != nil {
-		logger.L.Error().Err(err).Msg("Fail to join room")
-		return nil, err
-	}
-
-	return &JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
 }

@@ -12,6 +12,7 @@ import (
 	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
+	"chatroom/modules/rooms"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -70,7 +71,7 @@ func main() {
 			return
 		}
 
-		res, err := api.JoinRoom(r.Context(), roomID)
+		res, err := rooms.JoinRoom(r.Context(), roomID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
