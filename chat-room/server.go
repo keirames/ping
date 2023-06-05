@@ -9,6 +9,7 @@ import (
 	"chatroom/api"
 	"chatroom/config"
 	"chatroom/db"
+	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
 
@@ -20,6 +21,8 @@ import (
 
 func main() {
 	logger.New()
+	keygen.New()
+
 	err := config.Load()
 	if err != nil {
 		panic("cannot load config file!")

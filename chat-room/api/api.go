@@ -2,6 +2,7 @@ package api
 
 import (
 	"chatroom/db"
+	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
 	"context"
@@ -205,7 +206,7 @@ func JoinRoom(ctx context.Context, roomID int64) (*JoinRoomRes, error) {
 		psql.
 			Insert("users_and_chat_rooms").
 			Columns("id", "user_id", "room_id").
-			Values(10376977332412466, userID, roomID).
+			Values(keygen.Snowflake(), userID, roomID).
 			ToSql()
 	fmt.Println(sqlQ, args)
 	if err != nil {
