@@ -3,6 +3,8 @@ package db
 import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
+
+	_ "github.com/lib/pq"
 )
 
 var Conn *sqlx.DB

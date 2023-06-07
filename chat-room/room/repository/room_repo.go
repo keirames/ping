@@ -1,4 +1,4 @@
-package rooms
+package repository
 
 import (
 	"chatroom/db"
@@ -6,11 +6,26 @@ import (
 	"database/sql"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
 )
 
-func IsRoomExist(roomID int64) (bool, error) {
+type roomsRepository struct {
+	Psql sq.StatementBuilderType
+	Conn *sqlx.DB
+}
+
+type RoomRepository interface {
+	IsRoomExist(int64) (bool, error)
+	IsMemberOfRoom(int64, int64) (bool, error)
+}
+
+func New(psql sq.StatementBuilderType, conn *sqlx.DB) *roomsRepository {
+	return &roomsRepository{Psql: psql, Conn: conn}
+}
+
+func (rr *roomsRepository) IsRoomExist(roomID int64) (bool, error) {
 	q, args, err :=
-		db.Psql.
+		rr.Psql.
 			Select("id").
 			From("chat_rooms as cr").
 			Where(sq.Eq{"cr.id": roomID}).
@@ -33,7 +48,7 @@ func IsRoomExist(roomID int64) (bool, error) {
 	return true, nil
 }
 
-func IsMemberOfRoom(userID int64, roomID int64) (bool, error) {
+func (rr *roomsRepository) IsMemberOfRoom(userID int64, roomID int64) (bool, error) {
 	q, args, err :=
 		db.Psql.
 			Select("id").

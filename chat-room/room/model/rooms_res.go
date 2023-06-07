@@ -1,4 +1,4 @@
-package roomsmodel
+package model
 
 type JoinRoomRes struct {
 	ID string `json:"id"`
