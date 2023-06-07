@@ -1,8 +1,15 @@
 package db
 
-import "github.com/jmoiron/sqlx"
+import (
+	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx"
+
+	_ "github.com/lib/pq"
+)
 
 var Conn *sqlx.DB
+
+var Psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 func Connect() error {
 	conn, err :=

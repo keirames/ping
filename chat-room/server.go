@@ -6,12 +6,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"chatroom/api"
 	"chatroom/config"
 	"chatroom/db"
 	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
+	"chatroom/room/repository"
+	"chatroom/room/service"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -42,6 +43,9 @@ func main() {
 	r.Use(middlewares.Auth)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
+	roomRepository := repository.New(db.Psql, db.Conn)
+	roomService := service.New(roomRepository, db.Psql, db.Conn)
+
 	type joinRoomReq struct {
 		RoomID string `json:"roomId" validate:"required"`
 	}
@@ -70,7 +74,7 @@ func main() {
 			return
 		}
 
-		res, err := api.JoinRoom(r.Context(), roomID)
+		res, err := roomService.JoinRoom(r.Context(), roomID)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -94,7 +98,7 @@ func main() {
 			return
 		}
 
-		rooms, err := api.Rooms(r.Context(), page, 10)
+		rooms, err := roomService.Rooms(r.Context(), page, 10)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -129,7 +133,7 @@ func main() {
 			return
 		}
 
-		room, err := api.CreateRoom("new room", createRoomRequest.MemberIDs)
+		room, err := roomService.CreateRoom(createRoomRequest.Name, createRoomRequest.MemberIDs)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
