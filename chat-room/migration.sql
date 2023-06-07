@@ -28,8 +28,7 @@ CREATE TABLE messages (
 	user_id BIGINT NOT NULL REFERENCES users(id),
 	room_id BIGINT NOT NULL REFERENCES chat_rooms(id),
 	
-	PRIMARY KEY (id),
-	UNIQUE (user_id, room_id)
+	PRIMARY KEY (id)
 );
 
 CREATE TABLE users_and_chat_rooms (

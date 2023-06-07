@@ -144,5 +144,48 @@ func main() {
 		render.JSON(w, r, room)
 	})
 
+	type sendMessageRes struct {
+		Text   string `json:"text" validate:"required,max=255"`
+		RoomID string `json:"roomId" validate:"required"`
+	}
+
+	r.Post("/v1/send-message", func(w http.ResponseWriter, r *http.Request) {
+
+		validate := validator.New()
+
+		var smr sendMessageRes
+
+		err = json.NewDecoder(r.Body).Decode(&smr)
+		if err != nil {
+			logger.L.Error().Err(err).Msg("[API send-message] Cannot decode request body")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err := validate.Struct(smr)
+		if err != nil {
+			logger.L.Error().Err(err).Msg("[API send-message] Invalidate request body")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		roomID, err := strconv.ParseInt(smr.RoomID, 10, 64)
+		if err != nil {
+			logger.L.Error().Err(err).Msg("[API send-message] Invalid roomID")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		room, err := roomService.SendMessage(r.Context(), smr.Text, roomID)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		render.Status(r, http.StatusCreated)
+		render.JSON(w, r, room)
+	})
+
 	http.ListenAndServe(":3000", r)
 }
