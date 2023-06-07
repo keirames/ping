@@ -14,3 +14,7 @@ type PaginateRoomsRes struct {
 	Limit int        `json:"limit"`
 	Data  []RoomsRes `json:"data"`
 }
+
+type SendMessageRes struct {
+	ID string
+}

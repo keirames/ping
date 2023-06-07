@@ -195,3 +195,28 @@ func (rs *roomService) CreateRoom(
 
 	return &model.RoomsRes{ID: roomID, Name: name}, nil
 }
+
+func (rs *roomService) SendMessage(
+	ctx context.Context,
+	text string,
+	roomID int64,
+) (*model.SendMessageRes, error) {
+	userID := middlewares.GetUserID(ctx)
+
+	isExist, err := rs.rr.IsRoomExist(roomID)
+	if err != nil || !isExist {
+		return nil, err
+	}
+
+	isMember, err := rs.rr.IsMemberOfRoom(userID, roomID)
+	if err != nil || !isMember {
+		return nil, err
+	}
+
+	id, err := rs.rr.SendMessage(text, userID, roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.SendMessageRes{ID: strconv.FormatInt(*id, 10)}, nil
+}

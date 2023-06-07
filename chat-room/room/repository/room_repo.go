@@ -2,6 +2,7 @@ package repository
 
 import (
 	"chatroom/db"
+	"chatroom/keygen"
 	"chatroom/logger"
 	"database/sql"
 
@@ -15,8 +16,9 @@ type roomsRepository struct {
 }
 
 type RoomRepository interface {
-	IsRoomExist(int64) (bool, error)
-	IsMemberOfRoom(int64, int64) (bool, error)
+	IsRoomExist(roomID int64) (bool, error)
+	IsMemberOfRoom(userID int64, roomID int64) (bool, error)
+	SendMessage(text string, userID int64, roomID int64) (*int64, error)
 }
 
 func New(psql sq.StatementBuilderType, conn *sqlx.DB) *roomsRepository {
@@ -75,4 +77,32 @@ func (rr *roomsRepository) IsMemberOfRoom(userID int64, roomID int64) (bool, err
 	}
 
 	return true, nil
+}
+
+func (rr *roomsRepository) SendMessage(
+	text string,
+	userID int64,
+	roomID int64,
+) (*int64, error) {
+	q, args, err :=
+		rr.Psql.
+			Insert("messages").
+			Columns("id", "content", "user_id", "room_id").
+			Values(keygen.Snowflake(), text, userID, roomID).
+			Suffix("RETURNING id").
+			ToSql()
+	if err != nil {
+		logger.L.Error().Err(err).Msg("Cannot create query")
+		return nil, err
+	}
+
+	var msgID int64
+	row := rr.Conn.QueryRowx(q, args...)
+	err = row.Scan(&msgID)
+	if err != nil {
+		logger.L.Error().Err(err).Msg("Cannot send message")
+		return nil, err
+	}
+
+	return &msgID, nil
 }

@@ -25,7 +25,6 @@ model Message {
   chat_rooms ChatRoom @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users      Users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@unique([user_id, room_id])
   @@map("messages")
 }
 
