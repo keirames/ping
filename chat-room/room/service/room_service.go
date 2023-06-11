@@ -1,6 +1,7 @@
 package service
 
 import (
+	"chatroom/arrayutils"
 	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
@@ -117,27 +118,11 @@ func (rs *roomService) JoinRoom(
 	return &model.JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
 }
 
-func uniq(arr []string) []string {
-	deDupMap := make(map[string]bool)
-	result := []string{}
-
-	for _, i := range arr {
-		if !deDupMap[i] {
-			continue
-		}
-
-		deDupMap[i] = true
-		result = append(result, i)
-	}
-
-	return result
-}
-
 func (rs *roomService) CreateRoom(
 	name string,
 	memberIDs []string,
 ) (*model.RoomsRes, error) {
-	deDupIDs := uniq(memberIDs)
+	deDupIDs := arrayutils.Uniq(memberIDs)
 
 	sql, args, err :=
 		rs.psql.
