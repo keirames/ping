@@ -49,7 +49,7 @@ func (rs *roomService) Rooms(
 			Offset(offset).
 			ToSql()
 
-	fmt.Println(sql, args)
+	logger.L.Info().Msg("[rooms] - " + sql)
 
 	if err != nil {
 		fmt.Println("Fail to create sql")
