@@ -10,9 +10,9 @@ import (
 	"chatroom/db"
 	"chatroom/keygen"
 	"chatroom/logger"
-	"chatroom/middlewares"
 	"chatroom/room/repository"
 	"chatroom/room/service"
+	"chatroom/ws"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -40,7 +40,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
-	r.Use(middlewares.Auth)
+	// r.Use(middlewares.Auth)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	roomRepository := repository.New(db.Psql, db.Conn)
@@ -49,6 +49,13 @@ func main() {
 	type joinRoomReq struct {
 		RoomID string `json:"roomId" validate:"required"`
 	}
+
+	hub := ws.New()
+	go hub.Run()
+
+	r.Get("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws.Serve(hub, w, r)
+	})
 
 	r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
 		var jrr joinRoomReq
