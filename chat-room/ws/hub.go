@@ -27,8 +27,8 @@ func (h *hub) Run() {
 		case client := <-h.unsubscribe:
 			fmt.Println("client out", client)
 
-		case event := <-h.events:
-			fmt.Println(event)
+		case data := <-h.events:
+			eventsHandler(data)
 		}
 	}
 }
