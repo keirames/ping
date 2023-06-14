@@ -3,6 +3,7 @@ package ws
 import (
 	"bytes"
 	"chatroom/logger"
+	"chatroom/middlewares"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,10 +13,7 @@ import (
 
 const (
 	// Time allowed to write a message to the peer.
-	writeWait = 10 * time.Second
-
-	// Time allowed to read the next pong message from the peer.
-	readWait = 10 * time.Second
+	writeWait = 2 * time.Second
 
 	// Maximum message size allowed from peer.
 	maxMessageSize = 512
@@ -68,17 +66,16 @@ func (c *client) writeBump() {
 	}
 }
 
-func (c *client) readBump() {
+func (c *client) readBump(id int64) {
 	defer func() {
 		c.hub.unsubscribe <- c
 		c.conn.Close()
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(readWait))
 
 	for {
-		_, message, err := c.conn.ReadMessage()
+		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(
 				err,
@@ -90,12 +87,14 @@ func (c *client) readBump() {
 			break
 		}
 
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
-		c.hub.events <- message
+		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
+		c.hub.events <- &message{UserID: id, Data: string(msg)}
 	}
 }
 
 func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
+	userID := middlewares.GetUserID(r.Context())
+
 	// TODO: DEV only
 	upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
@@ -110,5 +109,5 @@ func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
 	c.hub.subscribe <- c
 
 	go c.writeBump()
-	go c.readBump()
+	go c.readBump(userID)
 }

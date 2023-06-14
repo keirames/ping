@@ -10,6 +10,7 @@ import (
 	"chatroom/db"
 	"chatroom/keygen"
 	"chatroom/logger"
+	"chatroom/middlewares"
 	"chatroom/room/repository"
 	"chatroom/room/service"
 	"chatroom/ws"
@@ -40,7 +41,7 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
-	// r.Use(middlewares.Auth)
+	r.Use(middlewares.Auth)
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 
 	roomRepository := repository.New(db.Psql, db.Conn)
@@ -50,7 +51,7 @@ func main() {
 		RoomID string `json:"roomId" validate:"required"`
 	}
 
-	hub := ws.New()
+	hub := ws.New(roomService)
 	go hub.Run()
 
 	r.Get("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -157,6 +158,7 @@ func main() {
 	}
 
 	r.Post("/v1/send-message", func(w http.ResponseWriter, r *http.Request) {
+		userID := middlewares.GetUserID(r.Context())
 
 		validate := validator.New()
 
@@ -183,7 +185,7 @@ func main() {
 			return
 		}
 
-		room, err := roomService.SendMessage(r.Context(), smr.Text, roomID)
+		room, err := roomService.SendMessage(userID, smr.Text, roomID)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)
