@@ -1,11 +1,9 @@
-import { Ws } from '@/ws';
+import { Main } from '@/main';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div>
-        <Ws />
-      </div>
+    <main className="w-full h-[100vh]">
+      <Main />
     </main>
   );
 }
