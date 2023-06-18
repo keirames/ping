@@ -13,6 +13,7 @@ import (
 	"chatroom/middlewares"
 	"chatroom/room/repository"
 	"chatroom/room/service"
+	"chatroom/ws"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -49,6 +50,13 @@ func main() {
 	type joinRoomReq struct {
 		RoomID string `json:"roomId" validate:"required"`
 	}
+
+	hub := ws.New(roomService)
+	go hub.Run()
+
+	r.Get("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
+		ws.Serve(hub, w, r)
+	})
 
 	r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
 		var jrr joinRoomReq
@@ -150,6 +158,7 @@ func main() {
 	}
 
 	r.Post("/v1/send-message", func(w http.ResponseWriter, r *http.Request) {
+		userID := middlewares.GetUserID(r.Context())
 
 		validate := validator.New()
 
@@ -176,7 +185,7 @@ func main() {
 			return
 		}
 
-		room, err := roomService.SendMessage(r.Context(), smr.Text, roomID)
+		room, err := roomService.SendMessage(userID, smr.Text, roomID)
 		if err != nil {
 			fmt.Println(err)
 			w.WriteHeader(http.StatusBadRequest)

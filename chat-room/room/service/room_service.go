@@ -182,12 +182,10 @@ func (rs *roomService) CreateRoom(
 }
 
 func (rs *roomService) SendMessage(
-	ctx context.Context,
+	userID int64,
 	text string,
 	roomID int64,
 ) (*model.SendMessageRes, error) {
-	userID := middlewares.GetUserID(ctx)
-
 	isExist, err := rs.rr.IsRoomExist(roomID)
 	if err != nil || !isExist {
 		return nil, err
