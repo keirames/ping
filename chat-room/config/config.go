@@ -9,11 +9,13 @@ import (
 type config struct {
 	DBSource  string `mapstructure:"DB_SOURCE"`
 	JWTSecret string `mapstructure:"JWT_SECRET"`
+	ENV       string `mapstructure:"ENV"`
 }
 
 var C config
 
 func Load() error {
+	viper.SetDefault("ENV", "DEV")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("dev")
 	viper.SetConfigType("env")
