@@ -20,6 +20,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/render"
 	"github.com/go-playground/validator/v10"
 )
@@ -45,6 +46,10 @@ func main() {
 
 	r.Use(render.SetContentType(render.ContentTypeJSON))
 	r.Use(middleware.Logger)
+
+	if config.C.ENV == "DEV" {
+		r.Use(cors.AllowAll().Handler)
+	}
 
 	r.Group(func(r chi.Router) {
 		type signInReq struct {
