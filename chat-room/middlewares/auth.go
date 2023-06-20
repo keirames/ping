@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"chatroom/jwt"
 	"chatroom/logger"
 	"context"
 	"fmt"
@@ -10,15 +11,14 @@ import (
 type ctxKey string
 
 func GetUserID(ctx context.Context) int64 {
-	return 61843283797778460
-
-	userID, ok := ctx.Value(ctxKey("userID")).(int64)
+	claims, ok := ctx.Value(ctxKey("userID")).(*jwt.JWTCustomClaim)
 	if !ok {
+		// TODO: don't know what to do if this occur
 		logger.L.Error().Msg("Cannot extract token value in context")
 		return 0
 	}
 
-	return userID
+	return claims.UserID
 }
 
 func Auth(next http.Handler) http.Handler {
@@ -32,7 +32,13 @@ func Auth(next http.Handler) http.Handler {
 		}
 
 		fmt.Println(hc.Value)
-		ctx := context.WithValue(r.Context(), ctxKey("userID"), "1")
+		t, err := jwt.ValidateJwt(context.Background(), hc.Value)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), ctxKey("userID"), t.Claims)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
