@@ -5,8 +5,8 @@ type JoinRoomRes struct {
 }
 
 type RoomsRes struct {
-	ID   string
-	Name string
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type PaginateRoomsRes struct {
@@ -16,5 +16,5 @@ type PaginateRoomsRes struct {
 }
 
 type SendMessageRes struct {
-	ID string
+	ID string `json:"id"`
 }
