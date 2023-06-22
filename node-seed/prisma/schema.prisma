@@ -10,6 +10,7 @@ datasource db {
 model ChatRoom {
   id                BigInt              @id
   name              String              @db.VarChar(255)
+  created_at        DateTime?           @default(now()) @db.Timestamptz(6)
   messages          Message[]
   usersAndChatRooms UsersAndChatRooms[]
 
@@ -17,13 +18,17 @@ model ChatRoom {
 }
 
 model Message {
-  id         BigInt   @id
-  content    String
-  type       String?  @default("text")
-  user_id    BigInt
-  room_id    BigInt
-  chat_rooms ChatRoom @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users      Users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id              BigInt            @id
+  content         String
+  type            String?           @default("text")
+  is_delete       Boolean?          @default(false)
+  parent_id       BigInt?
+  created_at      DateTime?         @default(now()) @db.Timestamptz(6)
+  user_id         BigInt
+  room_id         BigInt
+  chat_rooms      ChatRoom          @relation(fields: [room_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users           Users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages_emotes messages_emotes[]
 
   @@map("messages")
 }
@@ -32,6 +37,7 @@ model Users {
   id                BigInt              @id
   name              String              @db.VarChar(255)
   messages          Message[]
+  messages_emotes   messages_emotes[]
   usersAndChatRooms UsersAndChatRooms[]
 
   @@map("users")
@@ -46,4 +52,22 @@ model UsersAndChatRooms {
 
   @@unique([user_id, room_id])
   @@map("users_and_chat_rooms")
+}
+
+model message_emote_types {
+  id              BigInt            @id
+  name            String            @unique @db.VarChar(255)
+  messages_emotes messages_emotes[]
+}
+
+model messages_emotes {
+  id                  BigInt              @id
+  message_id          BigInt
+  user_id             BigInt
+  emote_type_id       BigInt
+  message_emote_types message_emote_types @relation(fields: [emote_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  messages            Message             @relation(fields: [message_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users               Users               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([message_id, user_id, emote_type_id])
 }
