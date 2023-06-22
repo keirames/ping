@@ -19,7 +19,7 @@ const generateId = () => {
 const randomPick = (arr: (bigint | number)[], times: number) => {
   const randomArr = [...Array(arr.length - 1).keys()].map((_, idx) => arr[idx]);
   for (let i = 0; i < randomArr.length; i++) {
-    const randomPos = Math.floor(Math.random() * arr.length - 1);
+    const randomPos = Math.floor(Math.random() * (arr.length - 1));
 
     const temp = randomArr[i];
     randomArr[i] = randomArr[randomPos];
@@ -87,7 +87,8 @@ async function main() {
     for (const i of usersAndRooms) {
       const contents: string[] = [];
       for (let i = 0; i < Math.floor(Math.random() * 2); i++) {
-        contents.push(faker.word.words(Math.floor(Math.random() * 20)));
+        const wordsLen = Math.floor(Math.random() * 20) + 1;
+        contents.push(faker.word.words(wordsLen));
       }
 
       for (const content of contents) {
