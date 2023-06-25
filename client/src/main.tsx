@@ -9,13 +9,13 @@ import {
   useQuery,
 } from 'react-query';
 import axios from 'axios';
+import { App } from '@/features/app';
+import { authService } from '@/api/auth-service';
 
 const queryClient = new QueryClient();
 
 const Auth = (props: { set: any }) => {
-  const { data, mutate } = useMutation('auth', () =>
-    axios.post('http://localhost:3000/v1/sign-in', { id: '1231232' }),
-  );
+  const { data, mutate } = useMutation('auth', () => authService.signIn());
 
   useEffect(() => {
     if (data) {
@@ -43,7 +43,8 @@ export const Main = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {!isAuth ? (
+      {!isAuth ? <Auth set={() => setIsAuth(true)} /> : <App />}
+      {/* {!isAuth ? (
         <Auth set={() => setIsAuth(true)} />
       ) : (
         <div className="w-full h-full flex flex-col">
@@ -66,7 +67,7 @@ export const Main = () => {
             />
           </div>
         </div>
-      )}
+      )} */}
     </QueryClientProvider>
   );
 };
