@@ -40,7 +40,7 @@ func (rs *roomService) Rooms(
 
 	sql, args, err :=
 		rs.psql.
-			Select("cr.*").
+			Select("cr.id as id, cr.name as name").
 			From("chat_rooms cr").
 			InnerJoin(
 				"users_and_chat_rooms uacr ON uacr.room_id = cr.id",

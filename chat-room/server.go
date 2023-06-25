@@ -13,6 +13,9 @@ import (
 	"chatroom/jwt"
 	"chatroom/keygen"
 	"chatroom/logger"
+	messagemodel "chatroom/message/model"
+	messagerepository "chatroom/message/repository"
+	messageservice "chatroom/message/service"
 	"chatroom/middlewares"
 	"chatroom/room/repository"
 	"chatroom/room/service"
@@ -48,7 +51,24 @@ func main() {
 	r.Use(middleware.Logger)
 
 	if config.C.ENV == "DEV" {
-		r.Use(cors.AllowAll().Handler)
+		logger.L.Info().Msg("Allow all cors in DEV mode")
+		r.Use(cors.New(
+			cors.Options{
+				AllowedOrigins: []string{"localhost:3000"},
+				AllowedMethods: []string{
+					http.MethodHead,
+					http.MethodGet,
+					http.MethodPost,
+					http.MethodPut,
+					http.MethodPatch,
+					http.MethodDelete,
+					http.MethodOptions,
+				},
+				AllowedHeaders:   []string{"*"},
+				AllowCredentials: true,
+				Debug:            true,
+			},
+		).Handler)
 	}
 
 	r.Group(func(r chi.Router) {
@@ -74,22 +94,14 @@ func main() {
 
 			jwt, err := jwt.GenerateJwt(
 				context.Background(),
-				61843244400680960,
+				67309604673069089,
 			)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
 				logger.L.Error().Err(err).Msg("Bad request sign-in fail to gen jwt")
 				return
 			}
-			// r.AddCookie(
-			// 	&http.Cookie{
-			// 		Name:     "x-token",
-			// 		Value:    *jwt,
-			// 		Expires:  time.Now().Add(time.Hour * 2400),
-			// 		Secure:   false,
-			// 		HttpOnly: true,
-			// 	},
-			// )
+
 			http.SetCookie(w, &http.Cookie{
 				Name:     "x-token",
 				Value:    *jwt,
@@ -107,6 +119,9 @@ func main() {
 
 		roomRepository := repository.New(db.Psql, db.Conn)
 		roomService := service.New(roomRepository, db.Psql, db.Conn)
+
+		messageRepository := messagerepository.New(db.Psql, db.Conn)
+		messageService := messageservice.New(messageRepository, roomRepository, db.Psql, db.Conn)
 
 		type joinRoomReq struct {
 			RoomID string `json:"roomId" validate:"required"`
@@ -175,6 +190,38 @@ func main() {
 
 			// w.WriteHeader(http.StatusOK)
 			render.JSON(w, r, rooms)
+		})
+
+		r.Get("/v1/messages", func(w http.ResponseWriter, r *http.Request) {
+			page, err := strconv.Atoi(r.URL.Query().Get("page"))
+			if err != nil {
+				logger.L.Error().Err(err).Msg("Invalid params")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			roomID, err := strconv.ParseInt(r.URL.Query().Get("roomId"), 10, 64)
+			if err != nil {
+				logger.L.Error().Err(err).Msg("Invalid params")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			validate := validator.New()
+			err = validate.Var(page, "gt=0")
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			messages, err := messageService.Messages(r.Context(), page, roomID, 10)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			res := messagemodel.MapMessagesEntityToModel(*messages)
+			render.JSON(w, r, res)
 		})
 
 		type createRoomRequest struct {
@@ -258,5 +305,5 @@ func main() {
 		})
 	})
 
-	http.ListenAndServe(":3000", r)
+	http.ListenAndServe(":8080", r)
 }
