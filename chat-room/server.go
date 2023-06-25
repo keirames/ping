@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,6 +22,7 @@ import (
 	"chatroom/room/service"
 	"chatroom/ws"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
@@ -92,9 +94,38 @@ func main() {
 				return
 			}
 
+			id, err := strconv.ParseInt(sir.ID, 10, 64)
+			if err != nil {
+				logger.L.Error().Err(err).Msg("sign-in parse fail")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			q, args, err := db.Psql.Select("1 as flag").
+				From("users u").
+				Where(squirrel.Eq{"u.id": id}).
+				ToSql()
+			if err != nil {
+				logger.L.Error().Err(err).Msg("Fail to prepare query")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
+			var flag int
+			err = db.Conn.Get(&flag, q, args...)
+			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if err != nil {
+				logger.L.Error().Err(err).Msg("sql exec error")
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+
 			jwt, err := jwt.GenerateJwt(
 				context.Background(),
-				67309604673069089,
+				id,
 			)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
