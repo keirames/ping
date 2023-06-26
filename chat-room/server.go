@@ -175,9 +175,9 @@ func main() {
 		})
 
 		r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
-			res, code, err := roomController.JoinRoom(r)
+			res, statusCode, err := roomController.JoinRoom(r)
 			if err != nil {
-				w.WriteHeader(code)
+				w.WriteHeader(statusCode)
 				return
 			}
 

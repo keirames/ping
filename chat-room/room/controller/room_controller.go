@@ -28,12 +28,12 @@ func New(o *Options) *roomController {
 }
 
 func (rc *roomController) JoinRoom(r *http.Request) (
-	*roommodel.JoinRoomRes,
-	int,
-	error,
+	res *roommodel.JoinRoomRes,
+	statusCode int,
+	err error,
 ) {
 	var jrr roommodel.JoinRoomReq
-	err := json.NewDecoder(r.Body).Decode(&jrr)
+	err = json.NewDecoder(r.Body).Decode(&jrr)
 	if err != nil {
 		logger.L.Error().Err(err).Msg("Fail to decode")
 		return nil, http.StatusBadRequest, err
