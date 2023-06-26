@@ -1,7 +1,11 @@
 package roomcontroller
 
 import (
+	"chatroom/logger"
+	roommodel "chatroom/room/model"
 	roomservice "chatroom/room/service"
+	"encoding/json"
+	"net/http"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -23,6 +27,19 @@ func New(o *Options) *roomController {
 	}
 }
 
-func (rc *roomController) Rooms() {}
+func (rc *roomController) JoinRoom(r *http.Request) (
+	*roommodel.JoinRoomRes,
+	int,
+	error,
+) {
+	var jrr roommodel.JoinRoomReq
+	err := json.NewDecoder(r.Body).Decode(&jrr)
+	if err != nil {
+		logger.L.Error().Err(err).Msg("Fail to decode")
+		return nil, http.StatusBadRequest, err
+	}
+
+	return nil, http.StatusBadRequest, err
+}
 
 func (rc *roomController) Room() {}

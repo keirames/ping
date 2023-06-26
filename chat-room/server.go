@@ -19,7 +19,6 @@ import (
 	messageservice "chatroom/message/service"
 	"chatroom/middlewares"
 	roomcontroller "chatroom/room/controller"
-	roommodel "chatroom/room/model"
 	roomrepository "chatroom/room/repository"
 	roomservice "chatroom/room/service"
 	"chatroom/ws"
@@ -176,13 +175,13 @@ func main() {
 		})
 
 		r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
-			var jrr roommodel.JoinRoomReq
-			err := json.NewDecoder(r.Body).Decode(&jrr)
+			res, code, err := roomController.JoinRoom(r)
 			if err != nil {
-				w.WriteHeader(http.StatusBadRequest)
-				logger.L.Error().Err(err).Msg("Fail to decode")
+				w.WriteHeader(code)
 				return
 			}
+
+			render.JSON(w, r, res)
 		})
 
 		r.Post("/v1/join-room2", func(w http.ResponseWriter, r *http.Request) {
