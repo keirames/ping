@@ -18,8 +18,10 @@ import (
 	messagerepository "chatroom/message/repository"
 	messageservice "chatroom/message/service"
 	"chatroom/middlewares"
-	"chatroom/room/repository"
-	"chatroom/room/service"
+	roomcontroller "chatroom/room/controller"
+	roommodel "chatroom/room/model"
+	roomrepository "chatroom/room/repository"
+	roomservice "chatroom/room/service"
 	"chatroom/ws"
 
 	"github.com/Masterminds/squirrel"
@@ -72,6 +74,14 @@ func main() {
 			},
 		).Handler)
 	}
+	validate := validator.New()
+
+	roomRepository := roomrepository.New(db.Psql, db.Conn)
+	roomService := roomservice.New(roomRepository, db.Psql, db.Conn)
+	roomController := roomcontroller.New(&roomcontroller.Options{
+		Validate:    validate,
+		RoomService: roomService,
+	})
 
 	r.Group(func(r chi.Router) {
 		type signInReq struct {
@@ -148,8 +158,8 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(middlewares.Auth)
 
-		roomRepository := repository.New(db.Psql, db.Conn)
-		roomService := service.New(roomRepository, db.Psql, db.Conn)
+		roomRepository := roomrepository.New(db.Psql, db.Conn)
+		roomService := roomservice.New(roomRepository, db.Psql, db.Conn)
 
 		messageRepository := messagerepository.New(db.Psql, db.Conn)
 		messageService := messageservice.New(messageRepository, roomRepository, db.Psql, db.Conn)
@@ -166,6 +176,16 @@ func main() {
 		})
 
 		r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
+			var jrr roommodel.JoinRoomReq
+			err := json.NewDecoder(r.Body).Decode(&jrr)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				logger.L.Error().Err(err).Msg("Fail to decode")
+				return
+			}
+		})
+
+		r.Post("/v1/join-room2", func(w http.ResponseWriter, r *http.Request) {
 			var jrr joinRoomReq
 			err := json.NewDecoder(r.Body).Decode(&jrr)
 			if err != nil {

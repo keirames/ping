@@ -1,4 +1,4 @@
-package model
+package roommodel
 
 type JoinRoomRes struct {
 	ID string `json:"id"`
@@ -17,4 +17,8 @@ type PaginateRoomsRes struct {
 
 type SendMessageRes struct {
 	ID string `json:"id"`
+}
+
+type JoinRoomReq struct {
+	RoomID string `json:"roomId" validate:"required"`
 }

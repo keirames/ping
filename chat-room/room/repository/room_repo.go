@@ -1,4 +1,4 @@
-package repository
+package roomrepository
 
 import (
 	"chatroom/db"

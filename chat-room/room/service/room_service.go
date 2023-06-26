@@ -1,4 +1,4 @@
-package service
+package roomservice
 
 import (
 	"chatroom/arrayutils"
@@ -15,13 +15,24 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type RoomService interface {
+	Rooms(ctx context.Context, page int, limit int) (*model.PaginateRoomsRes, error)
+	JoinRoom(ctx context.Context, roomID int64) (*model.JoinRoomRes, error)
+	CreateRoom(name string, memberIDs []string) (*model.RoomsRes, error)
+	SendMessage(userID int64, text string, roomID int64) (*model.SendMessageRes, error)
+}
+
 type roomService struct {
 	rr   repository.RoomRepository
 	psql sq.StatementBuilderType
 	conn *sqlx.DB
 }
 
-func New(rr repository.RoomRepository, psql sq.StatementBuilderType, c *sqlx.DB) *roomService {
+func New(
+	rr repository.RoomRepository,
+	psql sq.StatementBuilderType,
+	c *sqlx.DB,
+) *roomService {
 	return &roomService{
 		rr:   rr,
 		psql: psql,
