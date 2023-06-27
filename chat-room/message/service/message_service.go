@@ -4,25 +4,32 @@ import (
 	"chatroom/logger"
 	messagemodel "chatroom/message/model"
 	messagerepository "chatroom/message/repository"
-	"chatroom/middlewares"
-	"chatroom/room/repository"
-	"context"
+	roomrepository "chatroom/room/repository"
 	"fmt"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/jmoiron/sqlx"
 )
 
+type MessageService interface {
+	Messages(
+		userID int64,
+		page int,
+		roomID int64,
+		limit int,
+	) (*[]messagemodel.MessageEntity, error)
+}
+
 type messageService struct {
 	messageRepository messagerepository.MessageRepository
-	roomRepository    repository.RoomRepository
+	roomRepository    roomrepository.RoomRepository
 	psql              squirrel.StatementBuilderType
 	conn              *sqlx.DB
 }
 
 func New(
 	mr messagerepository.MessageRepository,
-	rr repository.RoomRepository,
+	rr roomrepository.RoomRepository,
 	p squirrel.StatementBuilderType,
 	c *sqlx.DB,
 ) *messageService {
@@ -35,12 +42,11 @@ func New(
 }
 
 func (ms *messageService) Messages(
-	ctx context.Context,
+	userID int64,
 	page int,
 	roomID int64,
 	limit int,
 ) (*[]messagemodel.MessageEntity, error) {
-	userID := middlewares.GetUserID(ctx)
 	isExist, err := ms.roomRepository.IsRoomExist(roomID)
 	if err != nil {
 		logger.L.Error().Err(err).Msg("check room exist error")

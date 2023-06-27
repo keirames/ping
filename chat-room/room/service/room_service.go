@@ -5,8 +5,8 @@ import (
 	"chatroom/keygen"
 	"chatroom/logger"
 	"chatroom/middlewares"
-	"chatroom/room/model"
-	"chatroom/room/repository"
+	roommodel "chatroom/room/model"
+	roomrepository "chatroom/room/repository"
 	"context"
 	"fmt"
 	"strconv"
@@ -16,20 +16,20 @@ import (
 )
 
 type RoomService interface {
-	Rooms(ctx context.Context, page int, limit int) (*model.PaginateRoomsRes, error)
-	JoinRoom(ctx context.Context, roomID int64) (*model.JoinRoomRes, error)
-	CreateRoom(name string, memberIDs []string) (*model.RoomsRes, error)
-	SendMessage(userID int64, text string, roomID int64) (*model.SendMessageRes, error)
+	Rooms(ctx context.Context, page int, limit int) (*roommodel.PaginateRoomsRes, error)
+	JoinRoom(ctx context.Context, roomID int64) (*roommodel.JoinRoomRes, error)
+	CreateRoom(name string, memberIDs []string) (*roommodel.RoomsRes, error)
+	SendMessage(userID int64, text string, roomID int64) (*roommodel.SendMessageRes, error)
 }
 
 type roomService struct {
-	rr   repository.RoomRepository
+	rr   roomrepository.RoomRepository
 	psql sq.StatementBuilderType
 	conn *sqlx.DB
 }
 
 func New(
-	rr repository.RoomRepository,
+	rr roomrepository.RoomRepository,
 	psql sq.StatementBuilderType,
 	c *sqlx.DB,
 ) *roomService {
@@ -44,7 +44,7 @@ func (rs *roomService) Rooms(
 	ctx context.Context,
 	page int,
 	limit int,
-) (*model.PaginateRoomsRes, error) {
+) (*roommodel.PaginateRoomsRes, error) {
 	userID := middlewares.GetUserID(ctx)
 
 	offset := uint64((page - 1) * limit)
@@ -81,18 +81,18 @@ func (rs *roomService) Rooms(
 		return nil, err
 	}
 
-	rr := []model.RoomsRes{}
+	rr := []roommodel.RoomsRes{}
 	for _, room := range rooms {
-		rr = append(rr, model.RoomsRes(room))
+		rr = append(rr, roommodel.RoomsRes(room))
 	}
 
-	return &model.PaginateRoomsRes{Page: page, Limit: limit, Data: rr}, nil
+	return &roommodel.PaginateRoomsRes{Page: page, Limit: limit, Data: rr}, nil
 }
 
 func (rs *roomService) JoinRoom(
 	ctx context.Context,
 	roomID int64,
-) (*model.JoinRoomRes, error) {
+) (*roommodel.JoinRoomRes, error) {
 	userID := middlewares.GetUserID(ctx)
 
 	isRoomExist, err := rs.rr.IsRoomExist(roomID)
@@ -126,13 +126,13 @@ func (rs *roomService) JoinRoom(
 		return nil, err
 	}
 
-	return &model.JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
+	return &roommodel.JoinRoomRes{ID: strconv.FormatInt(roomID, 10)}, nil
 }
 
 func (rs *roomService) CreateRoom(
 	name string,
 	memberIDs []string,
-) (*model.RoomsRes, error) {
+) (*roommodel.RoomsRes, error) {
 	deDupIDs := arrayutils.Uniq(memberIDs)
 
 	sql, args, err :=
@@ -189,14 +189,14 @@ func (rs *roomService) CreateRoom(
 		return nil, err
 	}
 
-	return &model.RoomsRes{ID: roomID, Name: name}, nil
+	return &roommodel.RoomsRes{ID: roomID, Name: name}, nil
 }
 
 func (rs *roomService) SendMessage(
 	userID int64,
 	text string,
 	roomID int64,
-) (*model.SendMessageRes, error) {
+) (*roommodel.SendMessageRes, error) {
 	isExist, err := rs.rr.IsRoomExist(roomID)
 	if err != nil || !isExist {
 		return nil, err
@@ -212,5 +212,5 @@ func (rs *roomService) SendMessage(
 		return nil, err
 	}
 
-	return &model.SendMessageRes{ID: strconv.FormatInt(*id, 10)}, nil
+	return &roommodel.SendMessageRes{ID: strconv.FormatInt(*id, 10)}, nil
 }
