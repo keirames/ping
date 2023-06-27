@@ -204,8 +204,11 @@ func main() {
 		})
 
 		r.Get("/v1/messages", func(w http.ResponseWriter, r *http.Request) {
-			// TODO: could be error
-			userID := middlewares.GetUserID(r.Context())
+			userID, err := middlewares.GetUserID(r.Context())
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
 			result, statusCode, err := messageController.Messages(r, userID)
 			if err != nil {
@@ -258,7 +261,11 @@ func main() {
 		}
 
 		r.Post("/v1/send-message", func(w http.ResponseWriter, r *http.Request) {
-			userID := middlewares.GetUserID(r.Context())
+			userID, err := middlewares.GetUserID(r.Context())
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 
 			validate := validator.New()
 
@@ -271,7 +278,7 @@ func main() {
 				return
 			}
 
-			err := validate.Struct(smr)
+			err = validate.Struct(smr)
 			if err != nil {
 				logger.L.Error().Err(err).Msg("[API send-message] Invalidate request body")
 				w.WriteHeader(http.StatusBadRequest)

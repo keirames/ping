@@ -10,15 +10,14 @@ import (
 
 type ctxKey string
 
-func GetUserID(ctx context.Context) int64 {
+func GetUserID(ctx context.Context) (int64, error) {
 	claims, ok := ctx.Value(ctxKey("userID")).(*jwt.JWTCustomClaim)
 	if !ok {
-		// TODO: don't know what to do if this occur
 		logger.L.Error().Msg("Cannot extract token value in context")
-		return 0
+		return 0, fmt.Errorf("Cannot extract token value")
 	}
 
-	return claims.UserID
+	return claims.UserID, nil
 }
 
 func Auth(next http.Handler) http.Handler {
