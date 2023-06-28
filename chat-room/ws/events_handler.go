@@ -32,11 +32,11 @@ func eventsHandler(m *message, s Service) error {
 			return err
 		}
 
-		roomID, err := strconv.ParseInt(smp.RoomID, 10, 64)
+		_, err := strconv.ParseInt(smp.RoomID, 10, 64)
 		if err != nil {
 			return err
 		}
-		_, err = s.SendMessage(m.UserID, smp.Text, roomID)
+		// _, err = s.SendMessage(m.UserID, smp.Text, roomID)
 		if err != nil {
 			return err
 		}

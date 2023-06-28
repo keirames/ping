@@ -11,11 +11,11 @@ import (
 )
 
 type JWTCustomClaim struct {
-	UserID string `json:"userId"`
+	UserID int64 `json:"userId"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJwt(ctx context.Context, userID string) (*string, error) {
+func GenerateJwt(ctx context.Context, userID int64) (*string, error) {
 	t := jwt.NewWithClaims(jwt.SigningMethodHS256, &JWTCustomClaim{
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{

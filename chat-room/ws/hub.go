@@ -2,7 +2,6 @@ package ws
 
 import (
 	"chatroom/logger"
-	"chatroom/room/model"
 	"fmt"
 )
 
@@ -20,11 +19,6 @@ type hub struct {
 }
 
 type Service interface {
-	SendMessage(
-		userID int64,
-		text string,
-		roomID int64,
-	) (*model.SendMessageRes, error)
 }
 
 func New(s Service) *hub {

@@ -2,6 +2,7 @@ package ws
 
 import (
 	"bytes"
+	"chatroom/config"
 	"chatroom/logger"
 	"chatroom/middlewares"
 	"fmt"
@@ -93,11 +94,12 @@ func (c *client) readBump(id int64) {
 }
 
 func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
-	userID := middlewares.GetUserID(r.Context())
+	userID, _ := middlewares.GetUserID(r.Context())
 
-	// TODO: DEV only
-	upgrader.CheckOrigin = func(r *http.Request) bool {
-		return true
+	if config.C.ENV == "DEV" {
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
