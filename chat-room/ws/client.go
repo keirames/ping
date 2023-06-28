@@ -94,7 +94,7 @@ func (c *client) readBump(id int64) {
 }
 
 func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
-	userID := middlewares.GetUserID(r.Context())
+	userID, _ := middlewares.GetUserID(r.Context())
 
 	if config.C.ENV == "DEV" {
 		upgrader.CheckOrigin = func(r *http.Request) bool {

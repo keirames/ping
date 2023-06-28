@@ -46,7 +46,7 @@ func Auth(next http.Handler) http.Handler {
 
 func VerifyTokenValue(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := GetUserID(r.Context())
+		userID, _ := GetUserID(r.Context())
 
 		fmt.Println("userID", userID)
 

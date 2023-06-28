@@ -45,7 +45,7 @@ func (rs *roomService) Rooms(
 	page int,
 	limit int,
 ) (*roommodel.PaginateRoomsRes, error) {
-	userID := middlewares.GetUserID(ctx)
+	userID, _ := middlewares.GetUserID(ctx)
 
 	offset := uint64((page - 1) * limit)
 
@@ -93,7 +93,7 @@ func (rs *roomService) JoinRoom(
 	ctx context.Context,
 	roomID int64,
 ) (*roommodel.JoinRoomRes, error) {
-	userID := middlewares.GetUserID(ctx)
+	userID, _ := middlewares.GetUserID(ctx)
 
 	isRoomExist, err := rs.rr.IsRoomExist(roomID)
 	if err != nil || !isRoomExist {
