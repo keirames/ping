@@ -7,8 +7,9 @@ import (
 )
 
 type config struct {
-	PORT string `mapstructure:"PORT"`
-	ENV  string `mapstructure:"ENV"`
+	KAFKA_HOST string `mapstructure:"KAFKA_HOST"`
+	PORT       string `mapstructure:"PORT"`
+	ENV        string `mapstructure:"ENV"`
 }
 
 var C config
