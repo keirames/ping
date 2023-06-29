@@ -25,7 +25,7 @@ type PaginateRoomsRes struct {
 }
 
 func Rooms(ctx context.Context, page int, limit int) (*PaginateRoomsRes, error) {
-	userID := middlewares.GetUserID(ctx)
+	userID, _ := middlewares.GetUserID(ctx)
 
 	offset := uint64((page - 1) * limit)
 
