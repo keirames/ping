@@ -18,6 +18,11 @@ type hub struct {
 	service     Service
 }
 
+type Hub interface {
+	Run()
+	SendMessageToClient(clientID int64, message int64)
+}
+
 type Service interface {
 }
 
@@ -36,6 +41,7 @@ func (h *hub) Run() {
 		select {
 		case client := <-h.subscribe:
 			fmt.Println("new client", client)
+			h.clients = append(h.clients, client)
 
 		case client := <-h.unsubscribe:
 			fmt.Println("client out", client)
@@ -45,6 +51,17 @@ func (h *hub) Run() {
 			if err != nil {
 				logger.L.Error().Err(err).Msg("Fail to handler events")
 			}
+		}
+	}
+}
+
+func (h *hub) SendMessageToClient(clientID int64, message int64) {
+	fmt.Println("send message to client: ", clientID, h.clients)
+	for _, c := range h.clients {
+		fmt.Println(c.id)
+		if c.id == clientID {
+			fmt.Println("found client ", clientID, "subscribe to server")
+			c.send <- []byte(string(message))
 		}
 	}
 }

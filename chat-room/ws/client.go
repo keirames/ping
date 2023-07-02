@@ -26,6 +26,9 @@ var (
 )
 
 type client struct {
+	// Specific client ID, using user's id
+	id int64
+
 	hub *hub
 
 	// The websocket connection.
@@ -107,7 +110,7 @@ func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	c := &client{h, conn, make(chan []byte)}
+	c := &client{userID, h, conn, make(chan []byte)}
 	c.hub.subscribe <- c
 
 	go c.writeBump()

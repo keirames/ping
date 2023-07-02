@@ -11,6 +11,7 @@ import (
 
 	"chatroom/config"
 	"chatroom/db"
+	"chatroom/event"
 	"chatroom/jwt"
 	"chatroom/keygen"
 	"chatroom/logger"
@@ -21,6 +22,7 @@ import (
 	roomcontroller "chatroom/room/controller"
 	roomrepository "chatroom/room/repository"
 	roomservice "chatroom/room/service"
+	"chatroom/ws"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/go-chi/chi/v5"
@@ -93,6 +95,11 @@ func main() {
 		Validate:       validate,
 		MessageService: messageService,
 	})
+
+	hub := ws.New(roomService)
+	go hub.Run()
+
+	go event.SubscribeMessageSentTopic(hub)
 
 	r.Group(func(r chi.Router) {
 		type signInReq struct {
@@ -176,12 +183,9 @@ func main() {
 			RoomID string `json:"roomId" validate:"required"`
 		}
 
-		// hub := ws.New(roomService)
-		// go hub.Run()
-
-		// r.Get("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
-		// 	ws.Serve(hub, w, r)
-		// })
+		r.Get("/v1/ws", func(w http.ResponseWriter, r *http.Request) {
+			ws.Serve(hub, w, r)
+		})
 
 		r.Post("/v1/join-room", func(w http.ResponseWriter, r *http.Request) {
 			res, statusCode, err := roomController.JoinRoom(r)
