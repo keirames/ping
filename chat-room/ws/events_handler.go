@@ -1,16 +1,20 @@
 package ws
 
 import (
+	"chatroom/common/converter"
 	"chatroom/logger"
 	"encoding/json"
-	"strconv"
+	"fmt"
 )
 
 // { type : "chat-room/send-message", payload: { roomId: "", text: "" } }
 
-type eventData struct {
-	Type    string `json:"type"`
-	Payload string `json:"payload"`
+type eventType struct {
+	Type string `json:"type"`
+}
+
+type eventPayloadChatRoomSendMessage struct {
+	Payload sendMessagePayload `json:"payload"`
 }
 
 type sendMessagePayload struct {
@@ -19,27 +23,28 @@ type sendMessagePayload struct {
 }
 
 func eventsHandler(m *message, s Service) error {
-	var ed eventData
-	err := json.Unmarshal([]byte(m.Data), &ed)
+	var et eventType
+	err := json.Unmarshal([]byte(m.Data), &et)
 	if err != nil {
+		logger.L.Err(err).Msg("cannot unmarshal event type")
 		return err
 	}
 
-	if ed.Type == "chat-room/send-message" {
-		var smp sendMessagePayload
-		if err := json.Unmarshal([]byte(ed.Payload), &smp); err != nil {
-			logger.L.Error().Err(err).Msg("data from events is invalid")
+	if et.Type == "chat-room/send-message" {
+		var event eventPayloadChatRoomSendMessage
+		if err := json.Unmarshal([]byte(m.Data), &event); err != nil {
+			logger.L.Err(err).Msg("cannot unmarshal event payload")
 			return err
 		}
 
-		_, err := strconv.ParseInt(smp.RoomID, 10, 64)
+		roomID, err := converter.StringToInt64(event.Payload.RoomID)
 		if err != nil {
+			logger.L.Err(err).Msg("cannot convert")
 			return err
 		}
-		// _, err = s.SendMessage(m.UserID, smp.Text, roomID)
-		if err != nil {
-			return err
-		}
+
+		fmt.Print(roomID)
+		// send message
 	}
 
 	return nil

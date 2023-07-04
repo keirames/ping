@@ -122,7 +122,7 @@ func (c *client) readBump(id int64) {
 		}
 
 		msg = bytes.TrimSpace(bytes.Replace(msg, newline, space, -1))
-		// c.hub.events <- &message{UserID: id, Data: string(msg)}
+		c.hub.events <- &message{UserID: id, Data: string(msg)}
 	}
 }
 

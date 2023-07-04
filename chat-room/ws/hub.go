@@ -47,11 +47,10 @@ func (h *hub) Run() {
 			logger.L.Info().Msg(fmt.Sprintf("user unsubscribe: %v", client.id))
 
 		case data := <-h.events:
-			fmt.Println(data)
-			// err := eventsHandler(data, h.service)
-			// if err != nil {
-			// 	logger.L.Error().Err(err).Msg("Fail to handler events")
-			// }
+			err := eventsHandler(data, h.service)
+			if err != nil {
+				logger.L.Error().Err(err).Msg("Fail to handler events")
+			}
 		}
 	}
 }
