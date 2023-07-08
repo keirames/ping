@@ -1,6 +1,42 @@
 import { useRooms } from '@/features/room/use-rooms';
 import clsx from 'clsx';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
+const Ws = () => {
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+
+  useEffect(() => {
+    const ws = new WebSocket('ws://localhost:8080/v1/ws');
+    setSocket(ws);
+  }, []);
+
+  useEffect(() => {
+    if (socket) {
+      socket.addEventListener('open', () => console.log('open connection'));
+
+      socket.addEventListener('message', (ev) => {
+        if (ev.data === 'ping') {
+          socket.send('pong');
+        }
+      });
+    }
+  }, [socket]);
+
+  return (
+    <button
+      onClick={() => {
+        socket?.send(
+          JSON.stringify({
+            type: 'chat-room/send-message',
+            payload: { roomId: '123123123', text: 'some text' },
+          }),
+        );
+      }}
+    >
+      send message comment
+    </button>
+  );
+};
 
 export const Rooms = () => {
   const [page, setPage] = useState<number>(1);
@@ -24,6 +60,7 @@ export const Rooms = () => {
           </div>
         );
       })}
+      <Ws />
     </div>
   );
 };
