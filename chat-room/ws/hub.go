@@ -40,11 +40,11 @@ func (h *hub) Run() {
 	for {
 		select {
 		case client := <-h.subscribe:
-			fmt.Println("new client", client)
+			logger.L.Info().Msg(fmt.Sprintf("user subscribe: %v", client.id))
 			h.clients = append(h.clients, client)
 
 		case client := <-h.unsubscribe:
-			fmt.Println("client out", client)
+			logger.L.Info().Msg(fmt.Sprintf("user unsubscribe: %v", client.id))
 
 		case data := <-h.events:
 			err := eventsHandler(data, h.service)

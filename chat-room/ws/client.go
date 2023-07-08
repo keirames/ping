@@ -13,6 +13,12 @@ import (
 )
 
 const (
+	// Time allowed to read the next pong message from the peer.
+	pongWait = 5 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait.
+	pingPeriod = (pongWait * 9) / 10
+
 	// Time allowed to write a message to the peer.
 	writeWait = 2 * time.Second
 
@@ -44,29 +50,45 @@ var upgrader = websocket.Upgrader{
 }
 
 func (c *client) writeBump() {
+	ticker := time.NewTicker(pingPeriod)
+
 	defer func() {
 		c.conn.Close()
 	}()
 
-	msg, ok := <-c.send
+	for {
+		select {
+		case <-ticker.C:
+			logger.L.Info().Msg("ticker end -> ping connected user")
 
-	err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-	if err != nil {
-		return
-	}
+			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			err := c.conn.WriteMessage(websocket.PingMessage, nil)
+			if err != nil {
+				logger.L.Err(err).Msg("write message fail")
+				return
+			}
 
-	if !ok {
-		c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-		return
-	}
+		case msg, ok := <-c.send:
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				logger.L.Err(err).Msg("cannot write deadline")
+				return
+			}
 
-	w, err := c.conn.NextWriter(websocket.TextMessage)
-	if err != nil {
-		return
-	}
-	_, err = w.Write(msg)
-	if err != nil {
-		return
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			w, err := c.conn.NextWriter(websocket.TextMessage)
+			if err != nil {
+				return
+			}
+			_, err = w.Write(msg)
+			if err != nil {
+				return
+			}
+		}
 	}
 }
 
@@ -77,10 +99,18 @@ func (c *client) readBump(id int64) {
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
+	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	c.conn.SetPongHandler(func(string) error {
+		logger.L.Info().Msg("pong from user received -> reset read deadline")
+
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
 	for {
 		_, msg, err := c.conn.ReadMessage()
 		if err != nil {
+			logger.L.Err(err).Msg("cannot read message")
 			if websocket.IsUnexpectedCloseError(
 				err,
 				websocket.CloseGoingAway,

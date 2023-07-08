@@ -11,7 +11,6 @@ import (
 
 	"chatroom/config"
 	"chatroom/db"
-	"chatroom/event"
 	"chatroom/jwt"
 	"chatroom/keygen"
 	"chatroom/logger"
@@ -58,7 +57,7 @@ func main() {
 		logger.L.Info().Msg("Allow all cors in DEV mode")
 		r.Use(cors.New(
 			cors.Options{
-				AllowedOrigins: []string{"localhost:3000"},
+				AllowedOrigins: []string{"http://localhost:3000"},
 				AllowedMethods: []string{
 					http.MethodHead,
 					http.MethodGet,
@@ -99,7 +98,7 @@ func main() {
 	hub := ws.New(roomService)
 	go hub.Run()
 
-	go event.SubscribeMessageSentTopic(hub)
+	// go event.SubscribeMessageSentTopic(hub)
 
 	r.Group(func(r chi.Router) {
 		type signInReq struct {
