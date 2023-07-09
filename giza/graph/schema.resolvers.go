@@ -20,6 +20,21 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 	panic(fmt.Errorf("not implemented: Todos - todos"))
 }
 
+// Rooms is the resolver for the rooms field.
+func (r *queryResolver) Rooms(ctx context.Context, page int) (*model.PagedRooms, error) {
+	panic(fmt.Errorf("not implemented: Rooms - rooms"))
+}
+
+// Room is the resolver for the room field.
+func (r *queryResolver) Room(ctx context.Context, id string) (*model.Room, error) {
+	panic(fmt.Errorf("not implemented: Room - room"))
+}
+
+// Messages is the resolver for the messages field.
+func (r *queryResolver) Messages(ctx context.Context, messagesInput model.MessagesInput) (*model.PagedMessages, error) {
+	panic(fmt.Errorf("not implemented: Messages - messages"))
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

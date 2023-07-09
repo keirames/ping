@@ -2,9 +2,46 @@
 
 package model
 
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type Message struct {
+	ID        string      `json:"id"`
+	Content   string      `json:"content"`
+	Type      MessageType `json:"type"`
+	IsDelete  bool        `json:"isDelete"`
+	ParentID  *string     `json:"parentId,omitempty"`
+	CreatedAt string      `json:"createdAt"`
+	UserID    string      `json:"userId"`
+	RoomID    string      `json:"roomId"`
+}
+
+type MessagesInput struct {
+	RoomID string `json:"roomId"`
+	Page   int    `json:"page"`
+}
+
 type NewTodo struct {
 	Text   string `json:"text"`
 	UserID string `json:"userId"`
+}
+
+type PagedMessages struct {
+	Page  int        `json:"page"`
+	Items []*Message `json:"items"`
+}
+
+type PagedRooms struct {
+	Page  int     `json:"page"`
+	Items []*Room `json:"items"`
+}
+
+type Room struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type Todo struct {
@@ -17,4 +54,47 @@ type Todo struct {
 type User struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
+}
+
+type MessageType string
+
+const (
+	MessageTypeText  MessageType = "Text"
+	MessageTypeImage MessageType = "Image"
+	MessageTypeEmote MessageType = "Emote"
+)
+
+var AllMessageType = []MessageType{
+	MessageTypeText,
+	MessageTypeImage,
+	MessageTypeEmote,
+}
+
+func (e MessageType) IsValid() bool {
+	switch e {
+	case MessageTypeText, MessageTypeImage, MessageTypeEmote:
+		return true
+	}
+	return false
+}
+
+func (e MessageType) String() string {
+	return string(e)
+}
+
+func (e *MessageType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = MessageType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid MessageType", str)
+	}
+	return nil
+}
+
+func (e MessageType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
