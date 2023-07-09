@@ -2,18 +2,21 @@ package main
 
 import (
 	"log"
-	"main/config"
 	"main/graph"
 	"net/http"
+	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 )
 
-func main() {
-	config.Load()
+const defaultPort = "8080"
 
-	port := config.C.Port
+func main() {
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
 
