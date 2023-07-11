@@ -18,3 +18,7 @@ func New() {
 			Caller().
 			Logger()
 }
+
+func ExecQueryError(err error) {
+	L.Err(err).Msg("Exec query error")
+}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"main/config"
+	"main/query"
 	"os"
 
 	"github.com/jackc/pgx/v5"
@@ -12,6 +13,7 @@ import (
 // var Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 // var Conn *sqlx.DB
 var Conn *pgx.Conn
+var Queries *query.Queries
 
 func Connect() {
 	conn, err :=
@@ -24,5 +26,6 @@ func Connect() {
 
 	defer conn.Close(context.Background())
 
+	Queries = query.New(conn)
 	Conn = conn
 }
