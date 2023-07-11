@@ -44,6 +44,12 @@ type Room struct {
 	Name string `json:"name"`
 }
 
+type SendMessageInput struct {
+	RoomID  string      `json:"roomId"`
+	Content string      `json:"content"`
+	Type    MessageType `json:"type"`
+}
+
 type Todo struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`

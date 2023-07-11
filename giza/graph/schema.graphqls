@@ -55,7 +55,7 @@ type Query {
   todos: [Todo!]!
   rooms(page: Int!): PagedRooms!
   room(id: String!): Room!
-  messages(MessagesInput: MessagesInput!): PagedMessages!
+  messages(messagesInput: MessagesInput!): PagedMessages!
 }
 
 input NewTodo {
@@ -63,6 +63,13 @@ input NewTodo {
   userId: String!
 }
 
+input SendMessageInput {
+  roomId: String!
+  content: String!
+  type: MessageType!
+}
+
 type Mutation {
   createTodo(input: NewTodo!): Todo!
+  sendMessage(sendMessageInput: SendMessageInput!): Message!
 }
