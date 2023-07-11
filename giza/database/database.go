@@ -1,22 +1,28 @@
 package database
 
 import (
+	"context"
+	"fmt"
 	"main/config"
-	"main/logger"
+	"os"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/jackc/pgx/v5"
 )
 
-var Conn *sqlx.DB
+// var Builder = squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+// var Conn *sqlx.DB
+var Conn *pgx.Conn
 
 func Connect() {
 	conn, err :=
-		sqlx.
-			Connect(config.C.DBDriverName, config.C.DBSource)
+		pgx.
+			Connect(context.Background(), config.C.DatabaseURL)
 	if err != nil {
-		logger.L.Err(err).Msg("Cannot connect to database")
-		panic("Cannot connect to database")
+		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
+		os.Exit(1)
 	}
+
+	defer conn.Close(context.Background())
 
 	Conn = conn
 }

@@ -9,6 +9,7 @@ import (
 type config struct {
 	DBSource     string `mapstructure:"DB_SOURCE"`
 	DBDriverName string `mapstructure:"DB_DRIVER_NAME"`
+	DatabaseURL  string `mapstructure:"DATABASE_URL"`
 	JWTSecret    string `mapstructure:"JWT_SECRET"`
 	Port         string `mapstructure:"PORT"`
 	ENV          string `mapstructure:"ENV"`

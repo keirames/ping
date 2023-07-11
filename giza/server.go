@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"main/config"
+	"main/database"
 	"main/graph"
 	"net/http"
 
@@ -14,6 +15,7 @@ const defaultPort = "8080"
 
 func main() {
 	config.Load()
+	database.Connect()
 
 	port := config.C.Port
 
