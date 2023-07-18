@@ -69,7 +69,12 @@ input SendMessageInput {
   type: MessageType!
 }
 
+input SignInInput {
+  userId: String!
+}
+
 type Mutation {
   createTodo(input: NewTodo!): Todo!
   sendMessage(sendMessageInput: SendMessageInput!): Message!
+  signIn(signInInput: SignInInput): String!
 }

@@ -20,6 +20,11 @@ func (r *mutationResolver) SendMessage(ctx context.Context, sendMessageInput mod
 	panic(fmt.Errorf("not implemented: SendMessage - sendMessage"))
 }
 
+// SignIn is the resolver for the signIn field.
+func (r *mutationResolver) SignIn(ctx context.Context, signInInput *model.SignInInput) (string, error) {
+	panic(fmt.Errorf("not implemented: SignIn - signIn"))
+}
+
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 	panic(fmt.Errorf("not implemented: Todos - todos"))
