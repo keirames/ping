@@ -2,6 +2,8 @@
 #
 # https://gqlgen.com/getting-started/
 
+directive @auth on FIELD_DEFINITION
+
 type Todo {
   id: ID!
   text: String!

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"main/graph/model"
+	"strconv"
 )
 
 // CreateTodo is the resolver for the createTodo field.
@@ -32,7 +33,23 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 
 // Rooms is the resolver for the rooms field.
 func (r *queryResolver) Rooms(ctx context.Context, page int) (*model.PagedRooms, error) {
-	panic(fmt.Errorf("not implemented: Rooms - rooms"))
+	rooms, err := r.RoomsService.Rooms(ctx, 67309604664680448, page)
+	if err != nil {
+		return nil, err
+	}
+
+	var roomsModel []*model.Room
+	for _, r := range *rooms {
+		roomsModel = append(roomsModel, &model.Room{
+			ID:   strconv.Itoa(int(r.ID)),
+			Name: r.Name,
+		})
+	}
+
+	return &model.PagedRooms{
+		Page:  page,
+		Items: roomsModel,
+	}, nil
 }
 
 // Room is the resolver for the room field.

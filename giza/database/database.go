@@ -24,8 +24,6 @@ func Connect() {
 		os.Exit(1)
 	}
 
-	defer conn.Close(context.Background())
-
 	Queries = query.New(conn)
 	Conn = conn
 }

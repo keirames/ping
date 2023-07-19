@@ -32,6 +32,45 @@ func (q *Queries) CreateAuthor(ctx context.Context, arg CreateAuthorParams) (Aut
 	return i, err
 }
 
+const createMessage = `-- name: CreateMessage :one
+INSERT INTO messages (
+  id, content, type, room_id, user_id
+) VALUES (
+  $1, $2, $3, $4, $5
+)
+RETURNING id, content, type, is_delete, parent_id, created_at, user_id, room_id
+`
+
+type CreateMessageParams struct {
+	ID      int64
+	Content string
+	Type    pgtype.Text
+	RoomID  int64
+	UserID  int64
+}
+
+func (q *Queries) CreateMessage(ctx context.Context, arg CreateMessageParams) (Message, error) {
+	row := q.db.QueryRow(ctx, createMessage,
+		arg.ID,
+		arg.Content,
+		arg.Type,
+		arg.RoomID,
+		arg.UserID,
+	)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.Type,
+		&i.IsDelete,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UserID,
+		&i.RoomID,
+	)
+	return i, err
+}
+
 const deleteAuthor = `-- name: DeleteAuthor :exec
 DELETE FROM authors
 WHERE id = $1
@@ -86,6 +125,40 @@ func (q *Queries) GetMessagesByRoomID(ctx context.Context, arg GetMessagesByRoom
 			&i.UserID,
 			&i.RoomID,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRooms = `-- name: GetRooms :many
+SELECT r.id, r.name, r.created_at FROM chat_rooms r
+INNER JOIN users_and_chat_rooms uacr
+ON uacr.room_id = r.id
+WHERE uacr.user_id = $1
+LIMIT 10
+OFFSET $2
+`
+
+type GetRoomsParams struct {
+	UserID int64
+	Offset int32
+}
+
+func (q *Queries) GetRooms(ctx context.Context, arg GetRoomsParams) ([]ChatRoom, error) {
+	rows, err := q.db.Query(ctx, getRooms, arg.UserID, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ChatRoom
+	for rows.Next() {
+		var i ChatRoom
+		if err := rows.Scan(&i.ID, &i.Name, &i.CreatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
