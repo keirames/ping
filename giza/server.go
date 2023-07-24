@@ -9,6 +9,7 @@ import (
 	"main/graph"
 	"main/internal/messages"
 	"main/internal/rooms"
+	"main/validator"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -20,6 +21,7 @@ import (
 const defaultPort = "8080"
 
 func main() {
+	validator.New()
 	config.Load()
 	database.Connect()
 

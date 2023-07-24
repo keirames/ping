@@ -7,7 +7,9 @@ package graph
 import (
 	"context"
 	"fmt"
+	"main/customerror"
 	"main/graph/model"
+	"main/validator"
 	"strconv"
 )
 
@@ -18,6 +20,19 @@ func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) 
 
 // SendMessage is the resolver for the sendMessage field.
 func (r *mutationResolver) SendMessage(ctx context.Context, sendMessageInput model.SendMessageInput) (*model.Message, error) {
+	type ValidateParams struct {
+		Content string `validator:"required"`
+		RoomID  string `validator:"required"`
+	}
+
+	err := validator.V.Struct(&ValidateParams{
+		Content: sendMessageInput.Content,
+		RoomID:  sendMessageInput.RoomID,
+	})
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
 	panic(fmt.Errorf("not implemented: SendMessage - sendMessage"))
 }
 
