@@ -7,15 +7,19 @@ import (
 )
 
 type config struct {
-	KAFKA_HOST string `mapstructure:"KAFKA_HOST"`
-	PORT       string `mapstructure:"PORT"`
-	ENV        string `mapstructure:"ENV"`
+	DBSource     string `mapstructure:"DB_SOURCE"`
+	DBDriverName string `mapstructure:"DB_DRIVER_NAME"`
+	DatabaseURL  string `mapstructure:"DATABASE_URL"`
+	JWTSecret    string `mapstructure:"JWT_SECRET"`
+	Port         string `mapstructure:"PORT"`
+	ENV          string `mapstructure:"ENV"`
 }
 
 var C config
 
 func Load() error {
 	viper.SetDefault("ENV", "DEV")
+	viper.SetDefault("PORT", "8080")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("dev")
 	viper.SetConfigType("env")
