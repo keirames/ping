@@ -1,0 +1,82 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+directive @auth on FIELD_DEFINITION
+
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  user: User!
+}
+
+type User {
+  id: ID!
+  name: String!
+}
+
+enum MessageType {
+  Text
+  Image
+  Emote
+}
+
+type Message {
+  id: ID!
+  content: String!
+  type: MessageType!
+  isDelete: Boolean!
+  parentId: ID
+  createdAt: String!
+  userId: ID!
+  roomId: ID!
+}
+
+type Room {
+  id: ID!
+  name: String!
+}
+
+type PagedRooms {
+  page: Int!
+  items: [Room!]!
+}
+
+type PagedMessages {
+  page: Int!
+  items: [Message!]!
+}
+
+input MessagesInput {
+  roomId: String!
+  page: Int!
+}
+
+type Query {
+  todos: [Todo!]!
+  rooms(page: Int!): PagedRooms!
+  room(id: String!): Room!
+  messages(messagesInput: MessagesInput!): PagedMessages!
+}
+
+input NewTodo {
+  text: String!
+  userId: String!
+}
+
+input SendMessageInput {
+  roomId: String!
+  content: String!
+  type: MessageType!
+}
+
+input SignInInput {
+  userId: String!
+}
+
+type Mutation {
+  createTodo(input: NewTodo!): Todo!
+  sendMessage(sendMessageInput: SendMessageInput!): Message!
+  signIn(signInInput: SignInInput): String!
+}
