@@ -7,18 +7,18 @@ import (
 )
 
 type config struct {
+	Env          string `mapstructure:"ENV"`
 	DBSource     string `mapstructure:"DB_SOURCE"`
 	DBDriverName string `mapstructure:"DB_DRIVER_NAME"`
 	DatabaseURL  string `mapstructure:"DATABASE_URL"`
 	JWTSecret    string `mapstructure:"JWT_SECRET"`
 	Port         string `mapstructure:"PORT"`
-	ENV          string `mapstructure:"ENV"`
 }
 
 var C config
 
 func Load() error {
-	viper.SetDefault("ENV", "DEV")
+	viper.SetDefault("Env", "dev")
 	viper.SetDefault("PORT", "8080")
 	viper.AddConfigPath(".")
 	viper.SetConfigName("dev")
