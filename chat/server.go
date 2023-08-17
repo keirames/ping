@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"main/broker"
 	"main/config"
 	"main/database"
 	"main/graph"
+	"main/internal/auth"
 	"main/internal/messages"
 	"main/internal/rooms"
 	"main/validator"
@@ -16,6 +18,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
+	"github.com/rs/cors"
 )
 
 const defaultPort = "8080"
@@ -25,14 +28,21 @@ func main() {
 	config.Load()
 	database.Connect()
 
+	go broker.CreateConsumer("room", func() {
+		fmt.Println("consumer topic room run")
+	})
+	go broker.CreatePublisher("room")
+
 	port := config.C.Port
 
 	router := chi.NewRouter()
-	// router.Use(cors.New(cors.Options{
-	// 	AllowedOrigins:   []string{"*"},
-	// 	AllowCredentials: true,
-	// 	Debug:            true,
-	// }).Handler)
+
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+		Debug:            true,
+	}).Handler)
+	router.Use(auth.Middleware())
 
 	roomsRepository := rooms.NewRoomsRepository()
 	messagesRepository := messages.NewMessagesRepository()
@@ -51,8 +61,8 @@ func main() {
 	c.Directives.Auth = func(
 		ctx context.Context, obj interface{}, next graphql.Resolver,
 	) (interface{}, error) {
-		fmt.Print(ctx)
-		return next(ctx)
+		// return next(ctx)
+		return nil, fmt.Errorf("Access denied")
 	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))

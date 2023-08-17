@@ -27,6 +27,10 @@ SELECT 1 FROM users_and_chat_rooms uacr
 WHERE uacr.user_id = $1
 AND uacr.room_id = $2;
 
+-- name: GetMembersIDs :many
+SELECT uacr.user_id FROM users_and_chat_rooms uacr
+WHERE uacr.room_id = $1;
+
 -- name: GetAuthor :one
 SELECT * FROM authors
 WHERE id = $1 LIMIT 1;

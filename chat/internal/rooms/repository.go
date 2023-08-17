@@ -15,10 +15,9 @@ type RoomsRepository interface {
 		ctx context.Context, userID int64, roomID int64,
 	) (bool, error)
 	GetRooms(
-		ctx context.Context,
-		userID int64,
-		page int,
+		ctx context.Context, userID int64, page int,
 	) (*[]query.ChatRoom, error)
+	GetMembersIDs(ctx context.Context, roomID int64) (*[]int64, error)
 }
 
 type roomsRepository struct{}
@@ -40,6 +39,18 @@ func (rr *roomsRepository) GetRooms(
 	}
 
 	return &rooms, nil
+}
+
+func (rr *roomsRepository) GetMembersIDs(
+	ctx context.Context,
+	roomID int64,
+) (*[]int64, error) {
+	ids, err := database.Queries.GetMembersIDs(ctx, roomID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ids, nil
 }
 
 func (rr *roomsRepository) IsRoomExist(ctx context.Context, id int64) (bool, error) {

@@ -93,6 +93,31 @@ func (q *Queries) GetAuthor(ctx context.Context, id int64) (Author, error) {
 	return i, err
 }
 
+const getMembersIDs = `-- name: GetMembersIDs :many
+SELECT uacr.user_id FROM users_and_chat_rooms uacr
+WHERE uacr.room_id = $1
+`
+
+func (q *Queries) GetMembersIDs(ctx context.Context, roomID int64) ([]int64, error) {
+	rows, err := q.db.Query(ctx, getMembersIDs, roomID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int64
+	for rows.Next() {
+		var user_id int64
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMessagesByRoomID = `-- name: GetMessagesByRoomID :many
 SELECT id, content, type, is_delete, parent_id, created_at, user_id, room_id FROM messages m
 WHERE m.room_id = $1
