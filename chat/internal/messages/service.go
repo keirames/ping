@@ -108,7 +108,6 @@ func (ms *messagesService) SendMessage(
 					Value: []byte(v),
 				})
 			}
-
 		}
 
 		err = p.WriteMessages(context.Background(), messages...)
