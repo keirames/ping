@@ -2,8 +2,6 @@
 #
 # https://gqlgen.com/getting-started/
 
-directive @auth on FIELD_DEFINITION
-
 type Todo {
   id: ID!
   text: String!
@@ -55,9 +53,9 @@ input MessagesInput {
 
 type Query {
   todos: [Todo!]!
-  rooms(page: Int!): PagedRooms! @auth
-  room(id: String!): Room! @auth
-  messages(messagesInput: MessagesInput!): PagedMessages! @auth
+  rooms(page: Int!): PagedRooms!
+  room(id: String!): Room!
+  messages(messagesInput: MessagesInput!): PagedMessages!
 }
 
 input NewTodo {
@@ -76,7 +74,7 @@ input SignInInput {
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo! @auth
-  sendMessage(sendMessageInput: SendMessageInput!): Message! @auth
-  signIn(signInInput: SignInInput): String! @auth
+  createTodo(input: NewTodo!): Todo!
+  sendMessage(sendMessageInput: SendMessageInput!): Message!
+  signIn(signInInput: SignInInput): String!
 }

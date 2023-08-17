@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"main/customerror"
 	"main/graph/model"
+	"main/internal/auth"
 	"main/validator"
 	"strconv"
 )
@@ -48,6 +49,12 @@ func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
 
 // Rooms is the resolver for the rooms field.
 func (r *queryResolver) Rooms(ctx context.Context, page int) (*model.PagedRooms, error) {
+	user, err := auth.GetUser(ctx)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("got user", *user)
+
 	rooms, err := r.RoomsService.Rooms(ctx, 67309604664680448, page)
 	if err != nil {
 		return nil, err

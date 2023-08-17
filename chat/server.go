@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"main/broker"
@@ -14,7 +13,6 @@ import (
 	"main/validator"
 	"net/http"
 
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
@@ -58,12 +56,6 @@ func main() {
 		RoomsService:    roomsService,
 		MessagesService: messagesService,
 	}}
-	c.Directives.Auth = func(
-		ctx context.Context, obj interface{}, next graphql.Resolver,
-	) (interface{}, error) {
-		// return next(ctx)
-		return nil, fmt.Errorf("Access denied")
-	}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))
 
