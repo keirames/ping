@@ -12,6 +12,7 @@ import (
 	"main/internal/auth"
 	"main/validator"
 	"strconv"
+	"time"
 )
 
 // CreateTodo is the resolver for the createTodo field.
@@ -34,7 +35,22 @@ func (r *mutationResolver) SendMessage(ctx context.Context, sendMessageInput mod
 		return nil, customerror.BadRequest()
 	}
 
-	panic(fmt.Errorf("not implemented: SendMessage - sendMessage"))
+	id, err := r.MessagesService.SendMessage(ctx, sendMessageInput)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: wrong return value
+	return &model.Message{
+		ID:        strconv.FormatInt(*id, 10),
+		Content:   sendMessageInput.Content,
+		Type:      sendMessageInput.Type,
+		IsDelete:  false,
+		ParentID:  nil,
+		CreatedAt: time.Now().String(),
+		UserID:    strconv.FormatInt(*id, 10),
+		RoomID:    "11",
+	}, nil
 }
 
 // SignIn is the resolver for the signIn field.

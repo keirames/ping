@@ -10,7 +10,7 @@ import (
 var cookieName = "auth-cookie"
 
 type userClaims struct {
-	id int64
+	ID int64
 }
 
 type ContextKey string
@@ -26,14 +26,17 @@ func Middleware() func(http.Handler) http.Handler {
 				c = &http.Cookie{Value: "I am a cookie"}
 			}
 
-			if err != nil || c == nil {
-				http.Error(w, "Invalid cookie", http.StatusForbidden)
-				return
+			// TODO: postman can use cookie, change logic
+			if config.C.Env == "prod" {
+				if err != nil || c == nil {
+					http.Error(w, "Invalid cookie", http.StatusForbidden)
+					return
+				}
 			}
 
 			if config.C.Env == "dev" {
 				ctx := context.WithValue(
-					r.Context(), ContextKey(userClaimsKey), &userClaims{id: 11},
+					r.Context(), ContextKey(userClaimsKey), &userClaims{ID: 67309604706623519},
 				)
 				r = r.WithContext(ctx)
 			}

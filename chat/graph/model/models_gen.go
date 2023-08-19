@@ -69,9 +69,9 @@ type User struct {
 type MessageType string
 
 const (
-	MessageTypeText  MessageType = "Text"
-	MessageTypeImage MessageType = "Image"
-	MessageTypeEmote MessageType = "Emote"
+	MessageTypeText  MessageType = "text"
+	MessageTypeImage MessageType = "image"
+	MessageTypeEmote MessageType = "emote"
 )
 
 var AllMessageType = []MessageType{

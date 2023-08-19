@@ -16,7 +16,7 @@ type TopicRoomMessage struct {
 
 var publishers []*kafka.Writer
 
-func CreateConsumer(topic string, handler func()) {
+func CreateConsumer(topic string, handler func(m kafka.Message)) {
 	fmt.Println("create consumer for topic", topic)
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{"localhost:9092", "localhost:9093", "localhost:9094"},
@@ -31,7 +31,7 @@ func CreateConsumer(topic string, handler func()) {
 			break
 		}
 		fmt.Printf("message at offset %d: %s = %s\n", m.Offset, string(m.Key), string(m.Value))
-		handler()
+		handler(m)
 	}
 
 	if err := r.Close(); err != nil {

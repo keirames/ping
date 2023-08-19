@@ -15,9 +15,9 @@ type User {
 }
 
 enum MessageType {
-  Text
-  Image
-  Emote
+  text
+  image
+  emote
 }
 
 type Message {

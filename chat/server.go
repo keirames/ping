@@ -10,6 +10,7 @@ import (
 	"main/internal/auth"
 	"main/internal/messages"
 	"main/internal/rooms"
+	"main/keygen"
 	"main/validator"
 	"net/http"
 
@@ -17,17 +18,20 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/cors"
+	"github.com/segmentio/kafka-go"
 )
 
 const defaultPort = "8080"
 
 func main() {
+	// TODO: these init func is very dangerous, maybe we will forget to call it
 	validator.New()
 	config.Load()
 	database.Connect()
+	keygen.New()
 
-	go broker.CreateConsumer("room", func() {
-		fmt.Println("consumer topic room run")
+	go broker.CreateConsumer("room", func(m kafka.Message) {
+		fmt.Println("consumer topic room run & need to find user inside socket data")
 	})
 	go broker.CreatePublisher("room")
 
