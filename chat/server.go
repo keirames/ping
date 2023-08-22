@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
 	"main/broker"
 	"main/config"
@@ -11,7 +11,9 @@ import (
 	"main/internal/messages"
 	"main/internal/rooms"
 	"main/keygen"
+	"main/logger"
 	"main/validator"
+	"main/ws"
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -30,8 +32,24 @@ func main() {
 	database.Connect()
 	keygen.New()
 
+	var s any
+	hub := ws.New(s)
+	hub.Run()
+
+	type RoomTopicMessage struct {
+		RoomID int64 `json:"roomId"`
+		UserID int64 `json:"userId"`
+	}
+
 	go broker.CreateConsumer("room", func(m kafka.Message) {
-		fmt.Println("consumer topic room run & need to find user inside socket data")
+		data := RoomTopicMessage{}
+		err := json.Unmarshal(m.Value, &data)
+		if err != nil {
+			logger.L.Err(err).Msg("Fail to parse data from topic 'room'")
+			return
+		}
+
+		hub.SendMessageToClient(data.UserID, 123)
 	})
 	go broker.CreatePublisher("room")
 
