@@ -1,9 +1,8 @@
 package main
 
 import (
-	"encoding/json"
+	"context"
 	"log"
-	"main/broker"
 	"main/config"
 	"main/database"
 	"main/graph"
@@ -20,7 +19,6 @@ import (
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/cors"
-	"github.com/segmentio/kafka-go"
 )
 
 const defaultPort = "8080"
@@ -31,27 +29,28 @@ func main() {
 	config.Load()
 	database.Connect()
 	keygen.New()
+	logger.New()
 
 	var s any
 	hub := ws.New(s)
-	hub.Run()
+	go hub.Run()
 
 	type RoomTopicMessage struct {
 		RoomID int64 `json:"roomId"`
 		UserID int64 `json:"userId"`
 	}
 
-	go broker.CreateConsumer("room", func(m kafka.Message) {
-		data := RoomTopicMessage{}
-		err := json.Unmarshal(m.Value, &data)
-		if err != nil {
-			logger.L.Err(err).Msg("Fail to parse data from topic 'room'")
-			return
-		}
+	// go broker.CreateConsumer("room", func(m kafka.Message) {
+	// 	data := RoomTopicMessage{}
+	// 	err := json.Unmarshal(m.Value, &data)
+	// 	if err != nil {
+	// 		logger.L.Err(err).Msg("Fail to parse data from topic 'room'")
+	// 		return
+	// 	}
 
-		hub.SendMessageToClient(data.UserID, 123)
-	})
-	go broker.CreatePublisher("room")
+	// 	hub.SendMessageToClient(data.UserID, 123)
+	// })
+	// go broker.CreatePublisher("room")
 
 	port := config.C.Port
 
@@ -83,6 +82,12 @@ func main() {
 
 	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
 	router.Handle("/query", srv)
+	router.Handle("/socket", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		err := ws.Serve(context.Background(), hub, w, r)
+		if err != nil {
+			http.Error(w, "BadRequest", http.StatusBadRequest)
+		}
+	}))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

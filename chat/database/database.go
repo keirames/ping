@@ -26,4 +26,5 @@ func Connect() {
 
 	Queries = query.New(conn)
 	Conn = conn
+	fmt.Println("DB connected!")
 }

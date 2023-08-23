@@ -2,8 +2,9 @@ package ws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
-	"main/config"
+	"main/internal/auth"
 	"main/logger"
 	"net/http"
 	"time"
@@ -60,8 +61,13 @@ func (c *client) writeBump() {
 		case <-ticker.C:
 			logger.L.Info().Msg("ticker end -> ping connected user")
 
-			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			err := c.conn.WriteMessage(websocket.PingMessage, nil)
+			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err != nil {
+				logger.L.Err(err).Msg("SetWriteDeadline fail")
+				return
+			}
+
+			err = c.conn.WriteMessage(websocket.PingMessage, nil)
 			if err != nil {
 				logger.L.Err(err).Msg("write message fail")
 				return
@@ -75,16 +81,22 @@ func (c *client) writeBump() {
 			}
 
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				if err != nil {
+					logger.L.Err(err).Msg("fail to close message")
+				}
+
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
+				logger.L.Err(err).Msg("fail to call next writer")
 				return
 			}
 			_, err = w.Write(msg)
 			if err != nil {
+				logger.L.Err(err).Msg("fail to write")
 				return
 			}
 		}
@@ -98,11 +110,21 @@ func (c *client) readBump(id int64) {
 	}()
 
 	c.conn.SetReadLimit(maxMessageSize)
-	c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+	if err != nil {
+		logger.L.Err(err).Msg("SetReadDeadline fail")
+		return
+	}
+
 	c.conn.SetPongHandler(func(string) error {
 		logger.L.Info().Msg("pong from user received -> reset read deadline")
 
-		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		if err != nil {
+			logger.L.Err(err).Msg("SetReadDeadline fail")
+			return err
+		}
+
 		return nil
 	})
 
@@ -115,7 +137,7 @@ func (c *client) readBump(id int64) {
 				websocket.CloseGoingAway,
 				websocket.CloseAbnormalClosure,
 			) {
-				fmt.Printf("error: %v", err)
+				logger.L.Error().Msg("UnexpectedCloseError")
 			}
 			break
 		}
@@ -125,25 +147,34 @@ func (c *client) readBump(id int64) {
 	}
 }
 
-func Serve(h *hub, w http.ResponseWriter, r *http.Request) {
-	// userID, _ := middlewares.GetUserID(r.Context())
-	// TODO: some aid
-	var userID int64
-
-	if config.C.Env == "dev" {
-		upgrader.CheckOrigin = func(r *http.Request) bool {
-			return true
-		}
+func Serve(ctx context.Context, h *hub, w http.ResponseWriter, r *http.Request) error {
+	uc, err := auth.GetUser(r.Context())
+	if err != nil {
+		return err
 	}
+
+	// if config.C.Env == "dev" {
+	// 	upgrader.CheckOrigin = func(r *http.Request) bool {
+	// 		return true
+	// 	}
+	// }
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		logger.L.Error().Err(err).Msg("Cannot upgrade http")
-		return
+		return fmt.Errorf("Cannot upgrade http")
 	}
 
-	c := &client{userID, h, conn, make(chan []byte)}
+	c := &client{
+		id:   uc.ID,
+		hub:  h,
+		conn: conn,
+		send: make(chan []byte),
+	}
 	c.hub.subscribe <- c
 
 	go c.writeBump()
-	go c.readBump(userID)
+	go c.readBump(uc.ID)
+
+	return nil
 }

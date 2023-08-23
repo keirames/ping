@@ -12,7 +12,7 @@ var L zerolog.Logger
 func New() {
 	L =
 		zerolog.
-			New(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}).
+			New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).
 			With().
 			Timestamp().
 			Caller().
