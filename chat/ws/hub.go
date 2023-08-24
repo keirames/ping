@@ -56,13 +56,13 @@ func (h *hub) Run() {
 	}
 }
 
-func (h *hub) SendMessageToClient(clientID int64, message int64) {
+func (h *hub) SendMessageToClient(clientID int64, message []byte) {
 	fmt.Println("send message to client: ", clientID, h.clients)
 	for _, c := range h.clients {
 		fmt.Println(c.id)
 		if c.id == clientID {
 			fmt.Println("found client ", clientID, "subscribe to server")
-			c.send <- []byte(string(message))
+			c.send <- message
 		}
 	}
 }

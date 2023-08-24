@@ -147,7 +147,9 @@ func (c *client) readBump(id int64) {
 	}
 }
 
-func Serve(ctx context.Context, h *hub, w http.ResponseWriter, r *http.Request) error {
+func Serve(
+	ctx context.Context, h *hub, w http.ResponseWriter, r *http.Request,
+) error {
 	uc, err := auth.GetUser(r.Context())
 	if err != nil {
 		return err
