@@ -1,8 +1,8 @@
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
-import { Auth } from '../src/modules/auth/auth';
-import { LayerContainer } from '../src/modules/layer/layer-container';
+import { Auth } from '../src/features/auth/auth';
+import { LayerContainer } from '../src/features/layer/layer-container';
 
 export default function Home() {
   const [queryClient] = useState(
