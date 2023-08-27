@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"main/config"
 	"net/http"
+	"strconv"
 )
 
 var cookieName = "auth-cookie"
@@ -20,28 +21,28 @@ var userClaimsKey = "user"
 func Middleware() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			c, err := r.Cookie(cookieName)
-
 			if config.C.Env == "dev" {
-				c = &http.Cookie{Value: "I am a cookie"}
-			}
-
-			// TODO: postman can use cookie, change logic
-			if config.C.Env == "prod" {
-				if err != nil || c == nil {
+				id := r.Header.Get("x-dev-user-id")
+				userID, err := strconv.ParseInt(id, 10, 64)
+				if err != nil {
 					http.Error(w, "Invalid cookie", http.StatusForbidden)
 					return
 				}
-			}
 
-			if config.C.Env == "dev" {
 				ctx := context.WithValue(
-					r.Context(), ContextKey(userClaimsKey), &userClaims{ID: 67309604706623519},
+					r.Context(), ContextKey(userClaimsKey), &userClaims{ID: userID},
 				)
 				r = r.WithContext(ctx)
+
+				next.ServeHTTP(w, r)
+				return
 			}
 
-			next.ServeHTTP(w, r)
+			panic("not implemented")
+			// if err != nil || c == nil {
+			// 	http.Error(w, "Invalid cookie", http.StatusForbidden)
+			// 	return
+			// }
 		})
 	}
 }

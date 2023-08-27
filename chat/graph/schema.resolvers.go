@@ -100,6 +100,44 @@ func (r *queryResolver) Messages(ctx context.Context, messagesInput model.Messag
 	panic(fmt.Errorf("not implemented: Messages - messages"))
 }
 
+// Message is the resolver for the message field.
+func (r *queryResolver) Message(ctx context.Context, getMessageInput *model.GetMessageInput) (*model.Message, error) {
+	uc, err := auth.GetUser(ctx)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
+	messageID, err := strconv.ParseInt(getMessageInput.MessageID, 10, 64)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
+	roomID, err := strconv.ParseInt(getMessageInput.RoomID, 10, 64)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
+	m, err := r.MessagesService.GetMessage(ctx, messageID, uc.ID, roomID)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
+	parentID := strconv.FormatInt(m.ParentID.Int64, 10)
+
+	result := &model.Message{
+		ID:        getMessageInput.MessageID,
+		Content:   m.Content,
+		Type:      model.MessageType(m.Type.String),
+		IsDelete:  m.IsDelete.Bool,
+		ParentID:  &parentID,
+		CreatedAt: m.CreatedAt.Time.String(),
+		UserID:    strconv.FormatInt(m.UserID, 10),
+		RoomID:    strconv.FormatInt(m.RoomID, 10),
+	}
+
+	return result, nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

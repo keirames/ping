@@ -2,7 +2,9 @@ package messages
 
 import (
 	"context"
+	"fmt"
 	"main/database"
+	"main/logger"
 	"main/query"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -13,6 +15,9 @@ type MessagesRepository interface {
 		ctx context.Context,
 		arg CreateMessageParams,
 	) (id *int64, err error)
+	GetMessage(
+		ctx context.Context, id int64,
+	) (*query.Message, error)
 }
 
 type messagesRepository struct {
@@ -46,4 +51,16 @@ func (mr *messagesRepository) CreateMessage(
 	}
 
 	return &m.ID, nil
+}
+
+func (mr *messagesRepository) GetMessage(
+	ctx context.Context, id int64,
+) (*query.Message, error) {
+	m, err := database.Queries.GetMessage(ctx, id)
+	if err != nil {
+		logger.L.Err(err).Msg("fail to exec query")
+		return nil, fmt.Errorf("fail to get message")
+	}
+
+	return &m, nil
 }

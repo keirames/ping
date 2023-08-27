@@ -51,11 +51,17 @@ input MessagesInput {
   page: Int!
 }
 
+input GetMessageInput {
+  roomId: String!
+  messageId: String!
+}
+
 type Query {
   todos: [Todo!]!
   rooms(page: Int!): PagedRooms!
   room(id: String!): Room!
   messages(messagesInput: MessagesInput!): PagedMessages!
+  message(getMessageInput: GetMessageInput): Message!
 }
 
 input NewTodo {

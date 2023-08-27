@@ -8,6 +8,11 @@ import (
 	"strconv"
 )
 
+type GetMessageInput struct {
+	RoomID    string `json:"roomId"`
+	MessageID string `json:"messageId"`
+}
+
 type Message struct {
 	ID        string      `json:"id"`
 	Content   string      `json:"content"`

@@ -31,6 +31,10 @@ AND uacr.room_id = $2;
 SELECT uacr.user_id FROM users_and_chat_rooms uacr
 WHERE uacr.room_id = $1;
 
+-- name: GetMessage :one
+SELECT * FROM messages m
+WHERE m.id = $1;
+
 -- name: GetAuthor :one
 SELECT * FROM authors
 WHERE id = $1 LIMIT 1;

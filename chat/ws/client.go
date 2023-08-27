@@ -117,7 +117,7 @@ func (c *client) readBump(id int64) {
 	}
 
 	c.conn.SetPongHandler(func(string) error {
-		logger.L.Info().Msg("pong from user received -> reset read deadline")
+		logger.L.Info().Msg(fmt.Sprintf("pong from user %v received -> reset read deadline", c.id))
 
 		err := c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		if err != nil {

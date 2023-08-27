@@ -11,6 +11,7 @@ import (
 	"main/internal/rooms"
 	"main/keygen"
 	"main/logger"
+	"main/query"
 	"strconv"
 
 	"github.com/segmentio/kafka-go"
@@ -21,6 +22,9 @@ type MessagesService interface {
 		ctx context.Context,
 		smi model.SendMessageInput,
 	) (id *int64, err error)
+	GetMessage(
+		ctx context.Context, id int64, userID int64, roomID int64,
+	) (*query.Message, error)
 }
 
 type messagesService struct {
@@ -134,4 +138,31 @@ func (ms *messagesService) SendMessage(
 	}
 
 	return id, nil
+}
+
+func (ms *messagesService) GetMessage(
+	ctx context.Context, id int64, userID int64, roomID int64,
+) (*query.Message, error) {
+	isExist, err := ms.roomsRepository.IsRoomExist(ctx, roomID)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+	if !isExist {
+		return nil, customerror.BadRequest()
+	}
+
+	isMember, err := ms.roomsRepository.IsMemberOfRoom(ctx, userID, roomID)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+	if !isMember {
+		return nil, customerror.BadRequest()
+	}
+
+	m, err := ms.messagesRepository.GetMessage(ctx, id)
+	if err != nil {
+		return nil, customerror.BadRequest()
+	}
+
+	return m, nil
 }

@@ -118,6 +118,27 @@ func (q *Queries) GetMembersIDs(ctx context.Context, roomID int64) ([]int64, err
 	return items, nil
 }
 
+const getMessage = `-- name: GetMessage :one
+SELECT id, content, type, is_delete, parent_id, created_at, user_id, room_id FROM messages m
+WHERE m.id = $1
+`
+
+func (q *Queries) GetMessage(ctx context.Context, id int64) (Message, error) {
+	row := q.db.QueryRow(ctx, getMessage, id)
+	var i Message
+	err := row.Scan(
+		&i.ID,
+		&i.Content,
+		&i.Type,
+		&i.IsDelete,
+		&i.ParentID,
+		&i.CreatedAt,
+		&i.UserID,
+		&i.RoomID,
+	)
+	return i, err
+}
+
 const getMessagesByRoomID = `-- name: GetMessagesByRoomID :many
 SELECT id, content, type, is_delete, parent_id, created_at, user_id, room_id FROM messages m
 WHERE m.room_id = $1

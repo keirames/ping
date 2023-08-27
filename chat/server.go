@@ -50,6 +50,7 @@ func main() {
 	}
 
 	go broker.CreateConsumer("room", func(m kafka.Message) {
+		logger.L.Info().Msg("consume msg from topic 'room'")
 		data := RoomTopicMessage{}
 		err := json.Unmarshal(m.Value, &data)
 		if err != nil {
@@ -76,13 +77,6 @@ func main() {
 
 	router := chi.NewRouter()
 
-	router.Use(cors.New(cors.Options{
-		AllowedOrigins:   []string{"*"},
-		AllowCredentials: true,
-		Debug:            true,
-	}).Handler)
-	router.Use(auth.Middleware())
-
 	roomsRepository := rooms.NewRoomsRepository()
 	messagesRepository := messages.NewMessagesRepository()
 	roomsService := rooms.NewRoomsService(&rooms.NewRoomsServiceParams{
@@ -100,14 +94,26 @@ func main() {
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))
 
-	router.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	router.Handle("/query", srv)
-	router.Handle("/socket", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		err := ws.Serve(context.Background(), hub, w, r)
-		if err != nil {
-			http.Error(w, "BadRequest", http.StatusBadRequest)
-		}
-	}))
+	router.Group(func(r chi.Router) {
+		r.Handle("/", playground.Handler("GraphQL playground", "/query"))
+	})
+
+	router.Group(func(r chi.Router) {
+		r.Use(cors.New(cors.Options{
+			AllowedOrigins:   []string{"*"},
+			AllowCredentials: true,
+			Debug:            true,
+		}).Handler)
+		r.Use(auth.Middleware())
+
+		r.Handle("/query", srv)
+		r.Handle("/socket", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			err := ws.Serve(context.Background(), hub, w, r)
+			if err != nil {
+				http.Error(w, "BadRequest", http.StatusBadRequest)
+			}
+		}))
+	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
