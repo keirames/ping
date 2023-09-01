@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"main/broker"
 	"main/config"
 	"main/database"
 	"main/graph"
@@ -13,6 +12,7 @@ import (
 	"main/internal/rooms"
 	"main/keygen"
 	"main/logger"
+	"main/messaging/bus"
 	"main/validator"
 	"main/ws"
 	"net/http"
@@ -49,7 +49,7 @@ func main() {
 		MessageID int64 `json:"messageId"`
 	}
 
-	go broker.CreateConsumer("room", func(m kafka.Message) {
+	go bus.CreateConsumer().Register("room", func(m *kafka.Message) {
 		logger.L.Info().Msg("consume msg from topic 'room'")
 		data := RoomTopicMessage{}
 		err := json.Unmarshal(m.Value, &data)
@@ -71,7 +71,30 @@ func main() {
 
 		hub.SendMessageToClient(data.UserID, dataToClient)
 	})
-	go broker.CreatePublisher("room")
+
+	// go broker.CreateConsumer("room", func(m kafka.Message) {
+	// 	logger.L.Info().Msg("consume msg from topic 'room'")
+	// 	data := RoomTopicMessage{}
+	// 	err := json.Unmarshal(m.Value, &data)
+	// 	if err != nil {
+	// 		logger.L.Err(err).Msg("Fail to parse data from topic 'room'")
+	// 		return
+	// 	}
+
+	// 	nm := NewMessage{
+	// 		RoomID:    data.RoomID,
+	// 		MessageID: data.MessageID,
+	// 	}
+
+	// 	dataToClient, err := json.Marshal(&nm)
+	// 	if err != nil {
+	// 		logger.L.Err(err).Msg("fail to marshal data")
+	// 		return
+	// 	}
+
+	// 	hub.SendMessageToClient(data.UserID, dataToClient)
+	// })
+	// go broker.CreatePublisher("room")
 
 	port := config.C.Port
 
