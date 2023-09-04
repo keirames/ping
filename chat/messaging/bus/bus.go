@@ -38,10 +38,10 @@ func (c *consumer) Register(topic string, handler func(*kafka.Message)) {
 			m.Offset, string(m.Key),
 			string(m.Value),
 		)
-		if err := r.CommitMessages(context.Background(), m); err != nil {
-			logger.L.Err(err).Msg("fail to commit message")
-			continue
-		}
+		// if err := r.CommitMessages(context.Background(), m); err != nil {
+		// 	logger.L.Err(err).Msg("fail to commit message")
+		// 	continue
+		// }
 
 		handler(&m)
 	}

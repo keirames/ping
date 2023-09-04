@@ -13,6 +13,8 @@ type config struct {
 	DatabaseURL  string `mapstructure:"DATABASE_URL"`
 	JWTSecret    string `mapstructure:"JWT_SECRET"`
 	Port         string `mapstructure:"PORT"`
+	Host         string `mapstructure:"HOST"`
+	RedisHost    string `mapstructure:"REDIS_HOST"`
 }
 
 var C config
