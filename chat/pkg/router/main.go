@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"main/config"
 	"main/logger"
@@ -11,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 	"github.com/redis/go-redis/v9"
 	"github.com/segmentio/kafka-go"
 )
@@ -45,20 +48,30 @@ func main() {
 			err := cmd.Err()
 			if err == redis.Nil {
 				// user not connected in any machine
-				logger.L.Err(err).Msg("user offline")
+				logger.L.Err(err).Send()
 				return fmt.Errorf("user is offline")
 			}
 			if err != nil {
-				logger.L.Err(err).Msg("redis fail")
+				logger.L.Err(err).Send()
 				return fmt.Errorf("redis fail")
 			}
 
 			machineID := cmd.Val()
-			// TODO: call desirer endpoint
-			// ???.???.???/receive-message
-			fmt.Println(machineID, "machineID")
+			url := machineID
+			logger.L.Info().Msg(fmt.Sprintf("machine with url %v for user %v", url, msg.UserID))
 
-			return fmt.Errorf("fail")
+			body := []byte(`{
+				"title": "Post title",
+				"body": "Post description",
+				"userId": 1
+			}`)
+			_, err = http.NewRequest("POST", url, bytes.NewBuffer(body))
+			if err != nil {
+				logger.L.Err(err).Send()
+				return errors.New("fail to contact desirer user")
+			}
+
+			return nil
 		})
 
 	r := chi.NewRouter()
@@ -70,7 +83,7 @@ func main() {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
 	})
 
 	r.Post("/user-unsubscribe", func(w http.ResponseWriter, r *http.Request) {
@@ -80,7 +93,17 @@ func main() {
 			return
 		}
 
-		w.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	r.Post("/ping", func(w http.ResponseWriter, r *http.Request) {
+		vulnerableUserIDs, err := handlers.Ping(context.Background(), rdb, r)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		render.JSON(w, r, vulnerableUserIDs)
 	})
 
 	addr := fmt.Sprintf("%v:%v", config.C.Host, config.C.Port)
