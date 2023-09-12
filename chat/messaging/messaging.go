@@ -44,7 +44,7 @@ func (c *consumer) Register(
 
 		if err := handler(&m); err != nil {
 			// Skip commit msg when execute fail.
-			logger.L.Info().Msg("skip commit msg because handler execute fail.")
+			logger.L.Err(err).Msg("skip commit msg because handler execute fail")
 			continue
 		}
 
