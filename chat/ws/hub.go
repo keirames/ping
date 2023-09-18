@@ -62,7 +62,7 @@ func (h *hub) SendMessageToClient(clientID int64, message []byte) {
 		fmt.Println(c.id)
 		if c.id == clientID {
 			fmt.Println("found client ", clientID, "subscribe to server")
-			c.send <- message
+			c.egress <- message
 		}
 	}
 }

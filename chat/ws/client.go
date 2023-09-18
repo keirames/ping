@@ -35,13 +35,14 @@ type client struct {
 	// Specific client ID, using user's id
 	id int64
 
+	// hub will control all client
 	hub *hub
 
 	// The websocket connection.
 	conn *websocket.Conn
 
-	// Buffered channel of outbound messages.
-	send chan []byte
+	// outbound messages chan used to avoid concurrent write on websocket connection
+	egress chan []byte
 }
 
 var upgrader = websocket.Upgrader{
@@ -73,7 +74,7 @@ func (c *client) writeBump() {
 				return
 			}
 
-		case msg, ok := <-c.send:
+		case msg, ok := <-c.egress:
 			err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err != nil {
 				logger.L.Err(err).Msg("cannot write deadline")
@@ -81,23 +82,22 @@ func (c *client) writeBump() {
 			}
 
 			if !ok {
-				err := c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				err := c.conn.WriteMessage(websocket.CloseMessage, nil)
 				if err != nil {
+					// Try to send close signal to client
+					// If failed, connection possibly closed.
 					logger.L.Err(err).Msg("fail to close message")
 				}
-
 				return
 			}
 
 			w, err := c.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
 				logger.L.Err(err).Msg("fail to call next writer")
-				return
 			}
 			_, err = w.Write(msg)
 			if err != nil {
 				logger.L.Err(err).Msg("fail to write")
-				return
 			}
 		}
 	}
@@ -137,7 +137,7 @@ func (c *client) readBump(id int64) {
 				websocket.CloseGoingAway,
 				websocket.CloseAbnormalClosure,
 			) {
-				logger.L.Error().Msg("UnexpectedCloseError")
+				logger.L.Err(err).Msg("UnexpectedCloseError")
 			}
 			break
 		}
@@ -168,10 +168,10 @@ func Serve(
 	}
 
 	c := &client{
-		id:   uc.ID,
-		hub:  h,
-		conn: conn,
-		send: make(chan []byte),
+		id:     uc.ID,
+		hub:    h,
+		conn:   conn,
+		egress: make(chan []byte),
 	}
 	c.hub.subscribe <- c
 
