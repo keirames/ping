@@ -24,7 +24,7 @@ func (c *consumer) Register(
 ) {
 	logger.L.Info().Msg("create consumer for topic " + topic)
 	r := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:  []string{"localhost:9092", "localhost:9093", "localhost:9094"},
+		Brokers:  []string{"localhost:9094"},
 		Topic:    topic,
 		GroupID:  "consumer-group-router",
 		MaxBytes: 10e6, // 10MB
