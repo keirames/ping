@@ -42,8 +42,6 @@ func main() {
 				return fmt.Errorf("fail to unmarshal msg")
 			}
 
-			fmt.Println("got u", msg)
-
 			cmd := rdb.Get(context.Background(), msg.UserID)
 			err := cmd.Err()
 			if err == redis.Nil {
@@ -58,7 +56,9 @@ func main() {
 
 			machineID := cmd.Val()
 			url := machineID
-			logger.L.Info().Msg(fmt.Sprintf("machine with url %v for user %v", url, msg.UserID))
+			logger.L.Info().Msg(
+				fmt.Sprintf("machine with url %v for user %v", url, msg.UserID),
+			)
 
 			body := []byte(`{
 				"title": "Post title",
